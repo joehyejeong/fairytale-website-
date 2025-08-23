@@ -3,40 +3,34 @@ import defaultTheme from 'tailwindcss/defaultTheme';
 /** @type {import('tailwindcss').Config} */
 export default {
     darkMode: ["class"],
-    content: ["./src/**/*.{js,jsx}"],
+    content: [
+        "./index.html",
+        "./src/**/*.{js,jsx,ts,tsx}",
+        "./src/**/*.{html,js}",
+        "./src/**/*.{js,jsx}"
+    ],
     theme: {
         extend: {
             colors: {
                 custom: {
-                    300: "#4C80F1",
+                    jk_yellow: "#F8B300",
+                    jk_light_yellow: "#FFF1CD",
+                    jk_lightest_yellow: "#FFFCF5",
+                    jk_dark_yellow: "#D39800",
+                    jk_red: "#BD4128",
+                    jk_blue: "#15478A",
+                    jk_gray: "#EAEAEA",
+                    jk_pink: "#FFD3D3",
                 },
             },
             fontFamily: {
-                sans: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
+                sans: ["Noto Sans KR", ...defaultTheme.fontFamily.sans],
                 noto: ["Noto Sans KR", "sans-serif"],
+                default: ["Noto Sans KR", "sans-serif"],
             },
             dropShadow: {
                 'basic': 'var(--drop-shadow-basic)',
             },
-            //   animation: {
-            //     'bounce-slow': 'bounce 3s ease-in-out infinite',
-            //     'fade': 'fade 2s ease-in-out infinite',
-            //     'fade-in': 'fadeIn 1s ease-out forwards',
-            //   },
-            //   keyframes: {
-            //     bounce: {
-            //       '0%, 100%': { transform: 'translateY(0)' },
-            //       '50%': { transform: 'translateY(-20px)' },
-            //     },
-            //     fade: {
-            //       '0%, 100%': { opacity: '1' },
-            //       '50%': { opacity: '0.3' },
-            //     },
-            //     fadeIn: {
-            //       '0%': { opacity: '0', transform: 'translateY(10px)' },
-            //       '100%': { opacity: '1', transform: 'translateY(0)' },
-            //     }
-            //   }
         },
     },
     plugins: [

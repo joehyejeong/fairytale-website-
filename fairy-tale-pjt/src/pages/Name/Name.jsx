@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BasicButton from '@/components/BasicButton';
 
 const Name = () => {
     const [userName, setUserName] = useState('');
+    const navigate = useNavigate();
 
     const handleStart = () => {
-        // 시작하기 버튼 클릭 시 처리 로직
+        // 시작하기 버튼 클릭 시 PrePlot 페이지로 이동
         console.log('시작하기 클릭됨:', userName);
+        navigate('/pre-plot');
     };
 
     return (

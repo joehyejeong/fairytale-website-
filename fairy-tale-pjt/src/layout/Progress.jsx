@@ -7,6 +7,8 @@ const Progress = ({ type }) => {
             case 'name':
             case 'prePlot':
                 return 'plot';
+            case 'createPlot':
+                return 'plot';
             case 'createStory':
                 return 'story';
             case 'createImage':

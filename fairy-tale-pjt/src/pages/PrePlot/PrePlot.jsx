@@ -26,7 +26,7 @@ const PrePlot = () => {
     const handleGeneratePlot = () => {
         console.log('줄거리 생성하기 클릭됨');
         // CreateStory 페이지로 이동
-        navigate('/create-story');
+        navigate('/create-plot');
     };
 
     return (

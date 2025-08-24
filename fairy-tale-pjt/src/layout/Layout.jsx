@@ -14,6 +14,8 @@ const Layout = ({ children }) => {
                 return null; // '/' 경로에서는 Progress 표시하지 않음
             case '/pre-plot':
                 return 'prePlot';
+            case '/create-plot':
+                return 'createPlot';
             case '/create-story':
                 return 'createStory';
             case '/create-plot':

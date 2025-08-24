@@ -10,15 +10,17 @@ import PrePlot from './pages/PrePlot/PrePlot';
 function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Name />} />
-          <Route path="/create-story" element={<CreateStory />} />
-          <Route path="/create-plot" element={<CreatePlot />} />
-          <Route path="/create-image" element={<CreateImage />} />
-          <Route path="/pre-plot" element={<PrePlot />} />
-        </Routes>
-      </Layout>
+      <div className="w-screen h-screen overflow-hidden">
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Name />} />
+            <Route path="/create-story" element={<CreateStory />} />
+            <Route path="/create-plot" element={<CreatePlot />} />
+            <Route path="/create-image" element={<CreateImage />} />
+            <Route path="/pre-plot" element={<PrePlot />} />
+          </Routes>
+        </Layout>
+      </div>
     </Router>
   );
 }

@@ -15,7 +15,7 @@ const StoryCard = ({ pageNumber }) => {
     };
 
     return (
-        <div className="w-[402px] h-[calc(100vh/2.2)] bg-custom-jk_light_yellow rounded-[5px] relative flex-shrink-0">
+        <div className="w-[402px] h-[calc(100vh/2.2)] bg-custom-jk_light_yellow rounded-[5px] relative flex-shrink-0 text-left">
             {/* 페이지 번호 */}
             <div className="pt-[25px] pl-[25px]">
                 <h3 className="text-xl font-medium font-noto text-black">

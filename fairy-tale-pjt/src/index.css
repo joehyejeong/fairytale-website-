@@ -144,3 +144,22 @@ body {
 .hover\:bg-custom-jk_dark_yellow:hover {
     background-color: var(--jk-dark-yellow);
 }
+
+/* 커스텀 스크롤바 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #15478A;
+    /* jk_blue 색상 */
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #0f2f5a;
+}

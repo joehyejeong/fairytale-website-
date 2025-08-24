@@ -18,8 +18,6 @@ const Layout = ({ children }) => {
                 return 'createPlot';
             case '/create-story':
                 return 'createStory';
-            case '/create-plot':
-                return 'createPlot';
             case '/create-image':
                 return 'createImage';
             default:
@@ -33,13 +31,13 @@ const Layout = ({ children }) => {
             case '/':
                 return '작가 이름을 적어주세요';
             case '/pre-plot':
-                return '줄거리를 생성해주세요';
+                return '줄거리를 간단히 적어주세요';
             case '/create-story':
-                return '이야기를 작성해주세요';
+                return '원하는 이야기를 선택하세요';
             case '/create-plot':
-                return '줄거리를 수정해주세요';
+                return '원하는 줄거리를 선택하세요';
             case '/create-image':
-                return '이미지를 생성해주세요';
+                return '이야기와 어울리는 이미지를 만들어 보아요';
             default:
                 return null;
         }

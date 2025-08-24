@@ -17,9 +17,9 @@ const CreateStory = () => {
 
     return (
         <div className="h-[calc(100vh-98px)] bg-white flex flex-col justify-center items-center">
-            <div className="text-center max-w-[1243px]">
+            <div className="text-center max-w-full ">
                 {/* 1. 메인 제목 */}
-                <h1 className="text-3xl font-medium font-noto text-black mb-[14px]">
+                <h1 className="text-3xl font-medium font-noto text-black mb-[14px] ">
                     줄거리를 토대로 이야기를 만들었어요.
                 </h1>
 
@@ -44,7 +44,7 @@ const CreateStory = () => {
                 </div>
 
                 {/* 3. 스토리 카드 가로 스크롤 영역 */}
-                <div className="w-full ">
+                <div className="w-full mx-[13px]">
                     <div className="flex gap-[20px] overflow-x-auto pb-[20px] custom-scrollbar">
                         {[1, 2, 3, 4, 5, 6].map((pageNumber) => (
                             <StoryCard key={pageNumber} pageNumber={pageNumber} />

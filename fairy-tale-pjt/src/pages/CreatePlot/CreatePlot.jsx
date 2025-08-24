@@ -67,7 +67,7 @@ const CreatePlot = () => {
                 </p>
 
                 {/* 3. 메인 콘텐츠 영역 */}
-                <div className="flex flex-row mx-[100px] mb-[2px]">
+                <div className="flex flex-row mx-[13px] mb-[2px]">
                     {/* 3-1. 왼쪽 패널 (줄거리 정보) */}
                     <div className="w-[450px] h-[calc(100vh/2)] bg-custom-jk_light_yellow border border-custom-jk_yellow rounded-[5px] p-[25px] relative">
                         {renderTextLine('제목', editedTitle, (e) => setEditedTitle(e.target.value))}
@@ -147,7 +147,7 @@ const CreatePlot = () => {
                 {/* 4. 하단 버튼 영역 */}
                 {/*글 생성하기 버튼 */}
                 <div className='w-full flex justify-end '>
-                    <div className='mr-[100px]'>
+                    <div className='mr-[13px]'>
                         <BasicButton text="선택한 줄거리로 글 생성하기" onClick={handleGenerateStory} />
                     </div>
                 </div>

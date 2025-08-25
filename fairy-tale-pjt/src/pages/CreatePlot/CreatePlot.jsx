@@ -1,23 +1,78 @@
-import React, { useState } from 'react';
-import BasicButton from '@/components/BasicButton';
-import IconButton from '@/components/IconButton';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import BasicButton from '../../components/BasicButton';
+import IconButton from '../../components/IconButton';
 
 const CreatePlot = () => {
-    const [selectedPlot, setSelectedPlot] = useState(1);
+    const [selectedPlot, setSelectedPlot] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
-    const [editedContent, setEditedContent] = useState('[ai연결을 확인하세요.]');
-    const [editedTitle, setEditedTitle] = useState('[ai 연결을 확인하세요.]');
-    const [editedTopic, setEditedTopic] = useState('[ai 연결을 확인하세요.]');
-    const [editedBackground, setEditedBackground] = useState('[ai 연결을 확인하세요.]');
-    const [editedCharacter, setEditedCharacter] = useState('[ai 연결을 확인하세요.]');
+    const [editedContent, setEditedContent] = useState('');
+    const [editedTitle, setEditedTitle] = useState('');
+    const [editedTopic, setEditedTopic] = useState('');
+    const [editedBackground, setEditedBackground] = useState('');
+    const [editedCharacter, setEditedCharacter] = useState('');
+    const [aiResponse, setAiResponse] = useState(null);
+    const [userInput, setUserInput] = useState(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const handlePlotSelect = (plotNumber) => {
-        setSelectedPlot(plotNumber);
+    useEffect(() => {
+        // route state에서 AI 응답과 사용자 입력 가져오기
+        const { aiResponse: routeAiResponse, userInput: routeUserInput } = location.state || {};
+
+        console.log('🔍 route state에서 읽어온 데이터:');
+        console.log('aiResponse:', routeAiResponse);
+        console.log('userInput:', routeUserInput);
+
+        if (!routeAiResponse) {
+            console.log('❌ aiResponse가 없음 - PrePlot으로 이동');
+            navigate('/pre-plot');
+            return;
+        }
+
+        try {
+            console.log('✅ route state 데이터:');
+            console.log('aiResponse:', routeAiResponse);
+            console.log('userInput:', routeUserInput);
+
+            setAiResponse(routeAiResponse);
+            setUserInput(routeUserInput);
+
+            // 첫 번째 줄거리로 초기값 설정
+            if (Array.isArray(routeAiResponse) && routeAiResponse.length > 0) {
+                const firstPlot = routeAiResponse[0];
+                console.log('📖 첫 번째 줄거리:', firstPlot);
+
+                setEditedTitle(firstPlot.title || '');
+                setEditedTopic(routeUserInput.topic || '');
+                setEditedBackground(firstPlot.background || 'AI가 생성한 배경 설정');
+                setEditedCharacter(firstPlot.character || '');
+                setEditedContent(firstPlot.plot || '');
+            } else {
+                console.log('⚠️ routeAiResponse가 배열이 아니거나 비어있음');
+                console.log('routeAiResponse 타입:', typeof routeAiResponse);
+                console.log('routeAiResponse 길이:', Array.isArray(routeAiResponse) ? routeAiResponse.length : '배열 아님');
+            }
+        } catch (error) {
+            console.error('❌ route state 처리 오류:', error);
+            navigate('/pre-plot');
+        }
+    }, [navigate, location.state]);
+
+    // 선택된 줄거리 변경 시 편집 내용 업데이트
+    useEffect(() => {
+        if (aiResponse && Array.isArray(aiResponse) && aiResponse[selectedPlot]) {
+            const selectedPlotData = aiResponse[selectedPlot];
+            setEditedTitle(selectedPlotData.title || '');
+            setEditedContent(selectedPlotData.plot || '');
+            setEditedCharacter(selectedPlotData.character || '');
+        }
+    }, [selectedPlot, aiResponse]);
+
+    const handlePlotSelect = (plotIndex) => {
+        setSelectedPlot(plotIndex);
     };
-
 
     const handleEditClick = () => {
         setIsEditing(true);
@@ -27,10 +82,15 @@ const CreatePlot = () => {
         setIsEditing(false);
         // 여기에 저장 로직 추가
     };
+
     const handleGenerateStory = () => {
         navigate('/create-story');
     };
 
+    const handleBackToPrePlot = () => {
+        // PrePlot 페이지로 이동 (localStorage 클리어 불필요)
+        navigate('/pre-plot');
+    };
 
     // 한 줄 텍스트 함수
     const renderTextLine = (label, value, onChange) => (
@@ -53,9 +113,25 @@ const CreatePlot = () => {
         </div>
     );
 
+    // AI 응답이 없으면 로딩 표시
+    if (!aiResponse) {
+        return (
+            <div className="h-[calc(100vh-98px)] bg-white flex flex-col items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-3xl font-medium font-noto text-black mb-[14px]">
+                        줄거리를 생성하고 있습니다...
+                    </h1>
+                    <p className="text-base font-medium font-noto text-[#929292] mb-[30px]">
+                        잠시만 기다려주세요.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="h-[calc(100vh-98px)] bg-white flex flex-col justify-center  ">
-            <div className="text-center ">
+        <div className="h-[calc(100vh-98px)] bg-white flex flex-col justify-center">
+            <div className="text-center">
                 {/* 1. 메인 제목 */}
                 <h1 className="text-3xl font-medium font-noto text-black mb-[14px]">
                     직코 작가님이 적은 내용으로 줄거리를 만들었어요.
@@ -71,7 +147,7 @@ const CreatePlot = () => {
                     {/* 3-1. 왼쪽 패널 (줄거리 정보) */}
                     <div className="w-[450px] h-[calc(100vh/2)] bg-custom-jk_light_yellow border border-custom-jk_yellow rounded-[5px] p-[25px] relative">
                         {renderTextLine('제목', editedTitle, (e) => setEditedTitle(e.target.value))}
-                        {renderTextLine('주제', editedTopic, (e) => setEditedTitle(e.target.value))}
+                        {renderTextLine('주제', editedTopic, (e) => setEditedTopic(e.target.value))}
                         {renderTextLine('배경', editedBackground, (e) => setEditedBackground(e.target.value))}
                         {renderTextLine('인물', editedCharacter, (e) => setEditedCharacter(e.target.value))}
 
@@ -91,29 +167,13 @@ const CreatePlot = () => {
                     </div>
 
                     {/* 3-2. 오른쪽 패널 (줄거리 내용) */}
-                    <div className="ml-[13px] flex-1 bg-custom-jk_light_yellow border border-custom-jk_yellow rounded-[5px] p-[25px] relative ">
+                    <div className="ml-[13px] flex-1 bg-custom-jk_light_yellow border border-custom-jk_yellow rounded-[5px] p-[25px] relative">
                         <div className='flex justify-between'>
                             <h3 className="w-[100px] text-xl font-medium font-noto text-black mb-[25px]">
-                                줄거리 {selectedPlot}
+                                줄거리 1
                             </h3>
-                            {/* 줄거리 1,2,3 표시하는 부분 - 추후 컴포넌트화 */}
-                            <div className="w-full ">
-                                <div className="w-[calc(100vw/12)] flex justify-between mx-auto mb-[20px] mr-[30px] ">
-                                    {[1, 2, 3].map((plotNumber) => (
-                                        <button
-                                            key={plotNumber}
-                                            onClick={() => handlePlotSelect(plotNumber)}
-                                            className={`w-[19px] h-[19px] rounded-full transition-colors duration-200 ${selectedPlot === plotNumber
-                                                ? 'bg-custom-jk_yellow'
-                                                : 'bg-white border border-custom-jk_yellow'
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-
+                            {/* 줄거리 1개만 표시하므로 선택 버튼 제거 */}
                         </div>
-
 
                         {isEditing ? (
                             <textarea
@@ -145,11 +205,12 @@ const CreatePlot = () => {
                 </div>
 
                 {/* 4. 하단 버튼 영역 */}
-                {/*글 생성하기 버튼 */}
-                <div className='w-full flex justify-end '>
-                    <div className='mr-[13px]'>
-                        <BasicButton text="선택한 줄거리로 글 생성하기" onClick={handleGenerateStory} />
-                    </div>
+                <div className='w-full flex justify-between px-[13px]'>
+                    {/* 뒤로가기 버튼 */}
+                    <BasicButton text="다시 작성하기" onClick={handleBackToPrePlot} />
+
+                    {/* 글 생성하기 버튼 */}
+                    <BasicButton text="선택한 줄거리로 글 생성하기" onClick={handleGenerateStory} />
                 </div>
             </div>
         </div>

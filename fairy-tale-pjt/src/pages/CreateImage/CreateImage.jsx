@@ -4,11 +4,13 @@ import PdfButton from '../../components/PdfButton';
 import LeftPage from './LeftPage';
 import RightPage from './RightPage';
 import TitlePage from './TitlePage';
+import ImageModal from '../ImageModal/ImageModal';
 
 const CreateImage = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [isFlipping, setIsFlipping] = useState(false);
     const [flipDirection, setFlipDirection] = useState('');
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     const pages = [
         { type: 'cover', title: '표지' },
@@ -18,7 +20,7 @@ const CreateImage = () => {
         { type: 'content', title: '7-8페이지' },
         { type: 'content', title: '9-10페이지' },
         { type: 'content', title: '11-12페이지' },
-        { type: 'content', title: '마지막장' }
+        { type: 'content', title: '13페이지' }
     ];
 
     const handlePrevPage = () => {
@@ -54,7 +56,11 @@ const CreateImage = () => {
 
     const handleImageClick = () => {
         console.log('이미지 클릭');
-        // 이미지 클릭 로직 구현
+        setIsImageModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsImageModalOpen(false);
     };
 
     const renderBook = () => {
@@ -78,10 +84,18 @@ const CreateImage = () => {
             return (
                 <div className="book-container flex items-center gap-0 book-hover">
                     <div className={`book-page left-page page-shadow page-depth ${isFlipping && flipDirection === 'left' ? 'flipping-left' : ''}`}>
-                        <LeftPage isCover={false} onImageClick={handleImageClick} />
+                        <LeftPage
+                            isCover={false}
+                            isLastPage={currentPageData.title === '13페이지'}
+                            onImageClick={handleImageClick}
+                        />
                     </div>
                     <div className={`book-page right-page page-shadow page-depth ${isFlipping && flipDirection === 'right' ? 'flipping-right' : ''}`}>
-                        <RightPage isCover={false} onImageClick={handleImageClick} />
+                        <RightPage
+                            isCover={false}
+                            isLastPage={currentPageData.title === '13페이지'}
+                            onImageClick={handleImageClick}
+                        />
                     </div>
                 </div>
             );
@@ -91,20 +105,12 @@ const CreateImage = () => {
     return (
         <div className="flex flex-col justify-center items-center h-[calc(100vh-98px)]">
             {/* 제목 입력 텍스트 - 정중앙 */}
-            <div
-                style={{
-                    fontFamily: 'Noto Sans KR',
-                    fontWeight: 500,
-                    fontSize: '24px',
-                    color: 'black',
-                    marginBottom: '20px'
-                }}
-            >
+            <div className="font-noto font-medium text-2xl text-black mb-5">
                 제목을 입력하세요
             </div>
 
             {/* 책과 PDF 버튼을 감싸는 컨테이너 */}
-            <div className="relative" style={{ marginBottom: '10px' }}>
+            <div className="relative mb-[10px]">
                 {/* PDF 버튼 - 책 오른쪽 상단 */}
                 <div className="absolute -top-12 -right-4 z-10">
                     <PdfButton onClick={handlePdfExport} />
@@ -117,33 +123,39 @@ const CreateImage = () => {
             </div>
 
             {/* 페이지 네비게이션 */}
-            <div className="flex items-center justify-center gap-5 mt-[20px]">
+            <div className="flex items-center justify-between w-40 mt-5">
                 <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 0 || isFlipping}
-                    className="transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95"
+                    className="w-8 h-8 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95"
                 >
-                    <ChevronLeft size={20} color="#A1A1A1" />
+                    <ChevronLeft size={20} className="text-[#A1A1A1]" />
                 </button>
                 <span
-                    style={{
-                        fontFamily: 'Noto Sans KR',
-                        fontWeight: 500,
-                        fontSize: '16px',
-                        color: '#A1A1A1'
-                    }}
-                    className={`page-fade fade-in transition-all duration-300 ${isFlipping ? 'opacity-50' : 'opacity-100'}`}
+                    className={`font-noto font-medium text-base text-[#A1A1A1] page-fade fade-in transition-all duration-300 ${isFlipping ? 'opacity-50' : 'opacity-100'}`}
                 >
-                    {pages[currentPage].title}
+                    {pages[currentPage].title === '1-2페이지' ? '1-2 페이지' :
+                        pages[currentPage].title === '3-4페이지' ? '3-4 페이지' :
+                            pages[currentPage].title === '5-6페이지' ? '5-6 페이지' :
+                                pages[currentPage].title === '7-8페이지' ? '7-8 페이지' :
+                                    pages[currentPage].title === '9-10페이지' ? '9-10 페이지' :
+                                        pages[currentPage].title === '11-12페이지' ? '11-12 페이지' :
+                                            pages[currentPage].title}
                 </span>
                 <button
                     onClick={handleNextPage}
                     disabled={currentPage === pages.length - 1 || isFlipping}
-                    className="transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95"
+                    className="w-8 h-8 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95"
                 >
-                    <ChevronRight size={20} color="#A1A1A1" />
+                    <ChevronRight size={20} className="text-[#A1A1A1]" />
                 </button>
             </div>
+
+            {/* ImageModal */}
+            <ImageModal
+                isOpen={isImageModalOpen}
+                onClose={handleCloseModal}
+            />
         </div>
     );
 };

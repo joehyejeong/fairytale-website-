@@ -33,9 +33,9 @@ const Progress = ({ type }) => {
     };
 
     return (
-        <div className="fixed top-12 left-0 right-0 h-[50px] bg-custom-jk_light_yellow flex justify-center items-center z-50">
+        <div className="fixed top-12 left-0 right-0 h-[50px] min-h-[50px] bg-custom-jk_light_yellow flex justify-center items-center z-50">
             <div className="w-1/3 flex items-center justify-between">
-                <div className={`${getStepStyle('plot')} transition-all duration-200 hover:bg-custom-jk_yellow`}>
+                <div className={`${getStepStyle('plot')} transition-all duration-200 hover:bg-custom-jk_yellow min-w-[80px] min-h-[36px] flex items-center justify-center`}>
                     줄거리 생성
                 </div>
 
@@ -43,7 +43,7 @@ const Progress = ({ type }) => {
                     chevron_right
                 </span>
 
-                <div className={`${getStepStyle('story')} transition-all duration-200 hover:bg-custom-jk_yellow`}>
+                <div className={`${getStepStyle('story')} transition-all duration-200 hover:bg-custom-jk_yellow min-w-[80px] min-h-[36px] flex items-center justify-center`}>
                     글 생성
                 </div>
 
@@ -51,7 +51,7 @@ const Progress = ({ type }) => {
                     chevron_right
                 </span>
 
-                <div className={`${getStepStyle('image')} transition-all duration-200 hover:bg-custom-jk_yellow`}>
+                <div className={`${getStepStyle('image')} transition-all duration-200 hover:bg-custom-jk_yellow min-w-[80px] min-h-[36px] flex items-center justify-center`}>
                     이미지 생성
                 </div>
             </div>

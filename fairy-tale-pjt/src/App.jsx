@@ -10,7 +10,7 @@ import PrePlot from './pages/PrePlot/PrePlot';
 function App() {
   return (
     <Router>
-      <div className="w-screen h-screen overflow-hidden">
+      <div className="w-screen h-screen overflow-auto">
         <Layout>
           <Routes>
             <Route path="/" element={<Name />} />

@@ -47,10 +47,10 @@ const Layout = ({ children }) => {
     const speechBubbleText = getSpeechBubbleText();
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white overflow-x-auto">
             <Header />
             {progressType && <Progress type={progressType} />}
-            <main className={`${progressType ? 'pt-[50px]' : ''}`}>
+            <main className={`${progressType ? 'pt-[50px]' : ''} min-w-[1026px]`}>
                 {children}
             </main>
             <UnderCharacter speechBubbleText={speechBubbleText} />

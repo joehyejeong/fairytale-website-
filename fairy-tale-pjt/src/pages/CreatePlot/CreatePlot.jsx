@@ -13,6 +13,7 @@ const CreatePlot = () => {
     const [editedCharacter, setEditedCharacter] = useState('');
     const [aiResponse, setAiResponse] = useState(null);
     const [userInput, setUserInput] = useState(null);
+    const [isGeneratingBook, setIsGeneratingBook] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -83,8 +84,46 @@ const CreatePlot = () => {
         // 여기에 저장 로직 추가
     };
 
-    const handleGenerateStory = () => {
-        navigate('/create-story');
+    const handleGenerateStory = async () => {
+        setIsGeneratingBook(true);
+
+        try {
+            // 현재 편집된 줄거리 데이터 수집
+            const currentPlotData = {
+                title: editedTitle,
+                character: editedCharacter,
+                background: editedBackground,
+                plot: editedContent,
+                lesson: aiResponse?.[0]?.lesson || "좋은 교훈",
+                style: editedTopic
+            };
+
+            console.log('동화책 생성 요청:', currentPlotData);
+
+            // Electron API를 통해 동화책 생성 호출
+            if (window.electronAPI && window.electronAPI.generateBook) {
+                const bookResult = await window.electronAPI.generateBook(currentPlotData);
+
+                console.log('동화책 생성 완료:', bookResult);
+
+                // CreateStory 페이지로 이동하면서 동화책 데이터 전달
+                navigate('/create-story', {
+                    state: {
+                        bookData: bookResult,
+                        plotData: currentPlotData
+                    }
+                });
+            } else {
+                console.error('Electron API를 찾을 수 없습니다.');
+                alert('동화책 생성 API 연결 오류가 발생했습니다.');
+            }
+
+        } catch (error) {
+            console.error('동화책 생성 실패:', error);
+            alert('동화책 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsGeneratingBook(false);
+        }
     };
 
     const handleBackToPrePlot = () => {
@@ -207,10 +246,14 @@ const CreatePlot = () => {
                 {/* 4. 하단 버튼 영역 */}
                 <div className='w-full flex justify-between px-[13px]'>
                     {/* 뒤로가기 버튼 */}
-                    <IconButton icon={<span className="material-symbols-outlined text-custom-jk_yellow" style={{ fontSize: '10px', width: '10px', height: '10px' }}>Turn Left</span>} onClick={handleBackToPrePlot} />
+                    <BasicButton text="다시 작성하기" onClick={handleBackToPrePlot} />
 
                     {/* 글 생성하기 버튼 */}
-                    <BasicButton text="선택한 줄거리로 글 생성하기" onClick={handleGenerateStory} />
+                    <BasicButton
+                        text={isGeneratingBook ? "동화책을 생성하고 있습니다..." : "선택한 줄거리로 글 생성하기"}
+                        onClick={handleGenerateStory}
+                        disabled={isGeneratingBook}
+                    />
                 </div>
             </div>
         </div>

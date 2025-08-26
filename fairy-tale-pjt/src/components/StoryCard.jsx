@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import IconButton from './IconButton';
 
-const StoryCard = ({ pageNumber }) => {
+const StoryCard = ({ pageNumber, initialContent = '[ai 연결 안 됨]' }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [content, setContent] = useState('[ai 연결 안 됨]');
+    const [content, setContent] = useState(initialContent);
+
+    // initialContent가 변경되면 content 상태 업데이트
+    useEffect(() => {
+        setContent(initialContent);
+    }, [initialContent]);
 
     const handleEditClick = () => {
         setIsEditing(true);

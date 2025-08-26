@@ -50,7 +50,7 @@ class TextModel:
             print(f"Ollama 초기화 실패: {e}", file=sys.stderr)
             self.available = False
     
-    def generate(self, prompt, max_tokens=1000, temperature=0.7):
+    def generate(self, prompt, max_tokens=2000, temperature=0.7):
         """텍스트 생성 - 응답 정리"""
         if not self.available or not self.client:
             return "모델을 사용할 수 없습니다. Ollama 서버가 실행 중인지 확인하세요."

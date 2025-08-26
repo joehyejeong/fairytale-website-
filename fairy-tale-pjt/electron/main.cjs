@@ -1,7 +1,8 @@
 // electron/main.cjs - Ollama gemma3:4b 모델용
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -400,9 +401,118 @@ ipcMain.handle('generate-book', async (event, data) => {
 ipcMain.handle('generate-image', async (event, data) => {
     console.log('generate-image 호출됨:', data);
     return {
-        imageUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNmMGYwZjAiLz48L3N2Zz4=",
+        imageUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiZmMGYwZjAiLz48L3N2Zz4=",
         pageNumber: data.pageNumber || 1
     };
+});
+
+// AI 연결 상태 테스트 핸들러
+ipcMain.handle('test-ai-connection', async (event) => {
+    try {
+        console.log('AI 연결 상태 테스트 요청');
+
+        const pythonScript = path.join(__dirname, '../python/test_connection.py');
+        const pythonExecutable = findPythonExecutable();
+
+        return new Promise((resolve) => {
+            const python = spawn(pythonExecutable, [pythonScript], {
+                env: {
+                    ...process.env,
+                    PYTHONIOENCODING: 'utf-8',
+                    PYTHONPATH: path.join(__dirname, '../python')
+                },
+                cwd: path.join(__dirname, '../python'),
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+
+            let stdout = '';
+            let stderr = '';
+
+            python.stdout.on('data', (data) => {
+                stdout += data.toString();
+            });
+
+            python.stderr.on('data', (data) => {
+                stderr += data.toString();
+            });
+
+            python.on('close', (code) => {
+                console.log(`Python 프로세스 종료 코드: ${code}`);
+                console.log(`Python 출력: ${stdout}`);
+
+                // 단순하게 종료 코드로만 판단
+                if (code === 0) {
+                    console.log('✅ Python 테스트 성공 - 모든 모델 연결됨');
+                    resolve({
+                        ollama: { connected: true, message: "Ollama 서버 연결됨" },
+                        text: { connected: true, message: "텍스트 모델 연결됨" },
+                        image: { connected: false, message: "이미지 모델 연결 안 됨" }
+                    });
+                } else {
+                    console.log('❌ Python 테스트 실패 - 일부 모델 연결 안 됨');
+                    resolve({
+                        ollama: { connected: false, message: "Ollama 서버 연결 안 됨" },
+                        text: { connected: false, message: "텍스트 모델 연결 안 됨" },
+                        image: { connected: false, message: "이미지 모델 연결 안 됨" }
+                    });
+                }
+            });
+        });
+    } catch (error) {
+        console.error('AI 연결 테스트 오류:', error);
+        return {
+            ollama: { connected: false, message: error.message },
+            text: { connected: false, message: error.message },
+            image: { connected: false, message: error.message }
+        };
+    }
+});
+
+// 파일 저장 핸들러
+ipcMain.handle('save-file', async (event, data) => {
+    try {
+        console.log('파일 저장 요청:', data);
+
+        // 파일 저장 다이얼로그 열기
+        const result = await dialog.showSaveDialog({
+            title: '동화책 저장',
+            defaultPath: `${data.title || '동화책'}.json`,
+            filters: [
+                { name: 'JSON 파일', extensions: ['json'] },
+                { name: '텍스트 파일', extensions: ['txt'] },
+                { name: '모든 파일', extensions: ['*'] }
+            ]
+        });
+
+        if (!result.canceled && result.filePath) {
+            let content = '';
+
+            if (result.filePath.endsWith('.json')) {
+                // JSON 형식으로 저장
+                content = JSON.stringify(data, null, 2);
+            } else {
+                // 텍스트 형식으로 저장
+                content = `제목: ${data.title}\n\n`;
+                if (data.pages) {
+                    data.pages.forEach((page, index) => {
+                        content += `페이지 ${page.page}:\n${page.content}\n\n`;
+                    });
+                }
+            }
+
+            // 파일에 저장
+            fs.writeFileSync(result.filePath, content, 'utf8');
+            console.log('파일 저장 완료:', result.filePath);
+
+            return { success: true, filePath: result.filePath };
+        } else {
+            console.log('파일 저장 취소됨');
+            return { success: false, canceled: true };
+        }
+    } catch (error) {
+        console.error('파일 저장 오류:', error);
+        return { success: false, error: error.message };
+    }
 });
 
 app.whenReady().then(createWindow);

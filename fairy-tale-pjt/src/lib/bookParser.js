@@ -26,27 +26,32 @@ export const cleanJsonString = (rawResponse) => {
  */
 export const extractPagesFromText = (text) => {
     console.log('텍스트에서 페이지 추출 시도:', text.substring(0, 200));
+    console.log('전체 텍스트:', text);
 
     const pages = [];
-    const pageRegex = /"page":\s*(\d+),\s*"content":\s*"([^"]+)"/g;
+
+    // 더 유연한 정규식으로 수정
+    const pageRegex = /"page"\s*:\s*(\d+)\s*,\s*"content"\s*:\s*"([^"]+)"/g;
     let match;
 
+    console.log('정규식 테스트 시작');
     while ((match = pageRegex.exec(text)) !== null) {
         const pageNum = parseInt(match[1]);
         const content = match[2];
+
+        console.log(`매치 발견: page=${pageNum}, content 길이=${content.length}`);
+        console.log(`페이지 ${pageNum} 추출:`, content.substring(0, 100));
 
         pages.push({
             page: pageNum,
             content: content
         });
-
-        console.log(`페이지 ${pageNum} 추출:`, content.substring(0, 50));
     }
 
     // 페이지 번호 순으로 정렬
     pages.sort((a, b) => a.page - b.page);
 
-    console.log(`총 ${pages.length}개 페이지 추출 완료`);
+    console.log(`총 ${pages.length}개 페이지 추출 완료:`, pages.map(p => p.page));
     return pages;
 };
 
@@ -56,8 +61,12 @@ export const extractPagesFromText = (text) => {
  * @returns {Array} 파싱된 페이지 배열
  */
 export const parseBookData = (bookData) => {
+    console.log('parseBookData 호출됨, bookData:', bookData);
+
     // raw_response가 있으면 JSON 파싱
     if (bookData.raw_response) {
+        console.log('raw_response 발견, 길이:', bookData.raw_response.length);
+
         try {
             // JSON 문자열 정리 (제어 문자 제거)
             const cleanResponse = cleanJsonString(bookData.raw_response);
@@ -65,7 +74,14 @@ export const parseBookData = (bookData) => {
 
             const parsed = JSON.parse(cleanResponse);
             console.log('파싱된 AI 응답:', parsed);
-            return parsed.pages || [];
+
+            if (parsed.pages) {
+                console.log('parsed.pages 발견, 개수:', parsed.pages.length);
+                return parsed.pages;
+            } else {
+                console.log('parsed.pages 없음, 전체 parsed:', parsed);
+                return [];
+            }
 
         } catch (e) {
             console.error('JSON 파싱 실패:', e);
@@ -73,7 +89,10 @@ export const parseBookData = (bookData) => {
 
             // 파싱 실패 시 텍스트에서 페이지 정보 추출 시도
             try {
-                return extractPagesFromText(bookData.raw_response);
+                console.log('텍스트 추출 시도...');
+                const extractedPages = extractPagesFromText(bookData.raw_response);
+                console.log('텍스트 추출 결과:', extractedPages);
+                return extractedPages;
             } catch (extractError) {
                 console.error('페이지 추출도 실패:', extractError);
                 return [];
@@ -81,8 +100,10 @@ export const parseBookData = (bookData) => {
         }
     } else if (bookData.pages) {
         // 기존 pages 구조가 있으면 그대로 사용
+        console.log('기존 pages 구조 사용:', bookData.pages);
         return bookData.pages;
     }
 
+    console.log('사용할 수 있는 데이터 없음');
     return [];
 };

@@ -21,13 +21,13 @@ const RightPage = ({ isCover = false, isLastPage = false, content = "오늘은 �
     };
 
     return (
-        <div className="w-[599px] h-[614px] bg-white drop-shadow-[4px_4px_4px_rgba(0,0,0,0.25)] relative">
+        <div className="w-[499px] h-[512px] bg-white drop-shadow-[4px_4px_4px_rgba(0,0,0,0.25)] relative">
             {isCover ? (
                 /* 표지인 경우 - jk_light_yellow 배경 부분만 클릭 가능 */
                 <div className="w-full h-full">
                     {/* 상단 이미지 영역 - jk_light_yellow 배경만 클릭 가능 */}
                     <div
-                        className="w-[594px] h-[466px] bg-custom-jk_light_yellow flex justify-center items-center cursor-pointer transition-transform"
+                        className="w-[494px] h-[388px] bg-custom-jk_light_yellow flex justify-center items-center cursor-pointer transition-transform"
                         onClick={onImageClick}
                     >
                         <img src={sunIcon} alt="Sun" className="w-[67px] h-[67px]" />
@@ -43,7 +43,7 @@ const RightPage = ({ isCover = false, isLastPage = false, content = "오늘은 �
                     {/* 저자 - 클릭 불가능 */}
                     <div className="mt-[20px] text-center">
                         <p className="text-[16px] font-medium font-noto text-black">
-                            {userName ? `[${userName}] 지음` : '[직코] 지음'}
+                            {userName ? `${userName} 지음` : '직코 지음'}
                         </p>
                     </div>
                 </div>

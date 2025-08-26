@@ -119,7 +119,7 @@ const PrePlot = () => {
                         value={storyContent}
                         onChange={(e) => setStoryContent(e.target.value)}
                         placeholder="동화책의 내용을 작성해 주세요"
-                        className="w-[727px] h-[calc(100vh/2.5)] bg-custom-jk_light_yellow text-xl font-normal font-noto text-black placeholder:text-[#929292] px-[26px] pt-[12px] resize-none outline-none rounded-[6px] overflow-y-auto"
+                        className="w-[727px] h-[200px] bg-custom-jk_light_yellow text-xl font-normal font-noto text-black placeholder:text-[#929292] px-[26px] pt-[12px] resize-none outline-none rounded-[6px] overflow-y-auto"
                         maxLength={300}
                         rows={5}
                     />

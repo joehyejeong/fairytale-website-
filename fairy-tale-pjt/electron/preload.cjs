@@ -5,4 +5,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     expandStory: (data) => ipcRenderer.invoke('expand-story', data),
     generateBook: (data) => ipcRenderer.invoke('generate-book', data),
     generateImage: (data) => ipcRenderer.invoke('generate-image', data),
+    saveFile: (data) => ipcRenderer.invoke('save-file', data),
+    testAIConnection: () => ipcRenderer.invoke('test-ai-connection'),
 });

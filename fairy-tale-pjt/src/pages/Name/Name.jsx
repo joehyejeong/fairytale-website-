@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BasicButton from '@/components/BasicButton';
 import useStoryStore from '@/stores/storyStore';
+import Lending from '../Lending/Lending';
 
 const Name = () => {
     const [userName, setUserName] = useState('');
+    const [showSplash, setShowSplash] = useState(true);
     const navigate = useNavigate();
     const { saveName } = useStoryStore();
 
@@ -17,6 +19,13 @@ const Name = () => {
         console.log('시작하기 클릭됨:', userName);
         navigate('/pre-plot');
     };
+
+    // 스플래시 화면 표시
+    if (showSplash) {
+        return (
+            <Lending onComplete={() => setShowSplash(false)} />
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white flex flex-col justify-center items-center">

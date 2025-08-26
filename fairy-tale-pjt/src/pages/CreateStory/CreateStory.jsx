@@ -17,12 +17,19 @@ const CreateStory = () => {
     useEffect(() => {
         const { bookData: routeBookData } = location.state || {};
         if (routeBookData) {
-            console.log('받은 bookData:', routeBookData);
+            console.log('📚 받은 bookData:', routeBookData);
             setBookData(routeBookData);
 
             // 유틸리티 함수를 사용하여 페이지 데이터 파싱
+            console.log('🔍 페이지 데이터 파싱 시작...');
             const pages = parseBookData(routeBookData);
+            console.log('✅ 파싱된 페이지들:', pages);
+            console.log('페이지 개수:', pages.length);
+            console.log('페이지 번호들:', pages.map(p => p.page));
+
             setParsedPages(pages);
+        } else {
+            console.log('❌ routeBookData가 없습니다');
         }
     }, [location.state]);
 

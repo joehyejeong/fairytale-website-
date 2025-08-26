@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BasicButton from '../../components/BasicButton';
 import IconButton from '../../components/IconButton';
+import useStoryStore from '../../stores/storyStore';
 
 const CreatePlot = () => {
     const [selectedPlot, setSelectedPlot] = useState(0);
@@ -17,6 +18,7 @@ const CreatePlot = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const { getName } = useStoryStore();
 
     useEffect(() => {
         // route state에서 AI 응답과 사용자 입력 가져오기
@@ -173,7 +175,7 @@ const CreatePlot = () => {
             <div className="text-center">
                 {/* 1. 메인 제목 */}
                 <h1 className="text-3xl font-medium font-noto text-black mb-[14px]">
-                    직코 작가님이 적은 내용으로 줄거리를 만들었어요.
+                    {getName() || ''} 작가님이 적은 내용으로 줄거리를 만들었어요.
                 </h1>
 
                 {/* 2. 서브 제목 */}
@@ -250,7 +252,7 @@ const CreatePlot = () => {
 
                     {/* 글 생성하기 버튼 */}
                     <BasicButton
-                        text={isGeneratingBook ? "동화책을 생성하고 있습니다..." : "선택한 줄거리로 글 생성하기"}
+                        text={isGeneratingBook ? "이야기을 만들고 있습니다..." : "선택한 줄거리로 글 생성하기"}
                         onClick={handleGenerateStory}
                         disabled={isGeneratingBook}
                     />

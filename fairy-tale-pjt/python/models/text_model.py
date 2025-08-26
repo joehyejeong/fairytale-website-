@@ -1,102 +1,63 @@
-# python/models/text_model.py
-import ollama
-import json
-import logging
+# python/models/text_model.py - Ollama 전용 (완전한 코드)
+import os
+import sys
 
 class TextModel:
     def __init__(self, model_name="gemma3:4b"):
-        """
-        Ollama 텍스트 모델 초기화
-        
-        Args:
-            model_name: Ollama 모델 이름 (기본값: gemma2)
-        """
         self.model_name = model_name
-        print(f"🔗 TextModel 초기화 시작")
-        print(f"🎯 요청된 모델명: {model_name}")
-        print(f"🔗 Ollama 클라이언트 초기화 시작...")
-        print(f"🌐 Ollama 서버 기본 주소: localhost:11434")
+        self.client = None
+        self.available = False
         
-        try:
-            # 환경변수에서 Ollama 서버 주소 확인
-            import os
-            ollama_host = os.environ.get('OLLAMA_HOST', 'localhost:11434')
-            print(f"🌐 Ollama 서버 주소: {ollama_host}")
-            
-            # Ollama 모델 경로 확인
-            ollama_models_path = os.environ.get('OLLAMA_MODELS_PATH', '/c/Users/eel8/.ollama/models')
-            print(f"📁 Ollama 모델 경로: {ollama_models_path}")
-            
-            # 명시적으로 서버 주소 설정
-            self.client = ollama.Client(host=ollama_host)
-            print(f"✅ Ollama 클라이언트 초기화 완료")
-        except Exception as e:
-            print(f"❌ Ollama 클라이언트 초기화 실패: {e}")
-            print(f"❌ 에러 상세: {str(e)}")
-            raise
-        
-        self._validate_model()
+        print(f"TextModel 초기화 시작: {model_name}", file=sys.stderr)
+        self._initialize_ollama()
     
-    def _validate_model(self):
-        """모델이 설치되어 있는지 확인"""
+    def _initialize_ollama(self):
+        """Ollama 초기화"""
         try:
-            print(f"🔍 모델 검증 시작")
-            print(f"🎯 검증할 모델명: {self.model_name}")
-            # 사용 가능한 모델 목록 확인
-            models = self.client.list()
-            print(f"📋 사용 가능한 모델 목록 조회 성공")
+            import ollama
             
-            # 응답 구조 안전하게 파싱
-            if hasattr(models, 'models') and isinstance(models.models, list):
-                # ListResponse 타입 처리
-                model_names = [model.model for model in models.models if hasattr(model, 'model')]
+            # Ollama 클라이언트 생성
+            host = os.environ.get('OLLAMA_HOST', 'localhost:11434')
+            self.client = ollama.Client(host=host)
+            
+            # 연결 테스트
+            models = self.client.list()
+            
+            # 응답 구조 파싱
+            if hasattr(models, 'models'):
+                model_names = [model.model for model in models.models]
             elif isinstance(models, dict) and 'models' in models:
                 model_names = [model.get('model', '') for model in models['models']]
-            elif isinstance(models, list):
-                model_names = [model.get('model', '') for model in models]
             else:
-                # 응답 구조를 로깅하여 확인
-                logging.warning(f"예상치 못한 모델 응답 구조: {type(models)} - {models}")
                 model_names = []
             
-            logging.info(f"사용 가능한 모델: {model_names}")
+            print(f"사용 가능한 모델: {model_names}", file=sys.stderr)
             
-            print(f"📋 사용 가능한 모델 목록: {model_names}")
-            
+            # 필요한 모델 확인
             if not any(self.model_name in name for name in model_names):
-                print(f"⚠️ 모델 '{self.model_name}'이 설치되지 않음")
-                print(f"⚠️ 자동 다운로드 시도...")
-                logging.warning(f"모델 {self.model_name}이 설치되지 않음. 자동 다운로드 시도...")
-                self.client.pull(self.model_name)
-                print(f"✅ 모델 '{self.model_name}' 다운로드 완료")
-                logging.info(f"모델 {self.model_name} 다운로드 완료")
-            else:
-                print(f"✅ 모델 '{self.model_name}' 사용 준비 완료")
-                print(f"✅ 모델 검증 성공!")
-                logging.info(f"모델 {self.model_name} 사용 준비 완료")
+                print(f"모델 {self.model_name}을 찾을 수 없습니다", file=sys.stderr)
+                print(f"다운로드: ollama pull {self.model_name}", file=sys.stderr)
+                # 자동 다운로드 시도하지 않음 (시간이 오래 걸리므로)
+            
+            print(f"Ollama 연결 성공: {self.model_name}", file=sys.stderr)
+            self.available = True
                 
+        except ImportError:
+            print("ollama 패키지가 설치되지 않았습니다", file=sys.stderr)
+            print("설치: pip install ollama", file=sys.stderr)
+            self.available = False
         except Exception as e:
-            print(f"❌ 모델 검증 실패: {e}")
-            print(f"❌ 에러 타입: {type(e)}")
-            logging.error(f"모델 검증 실패: {e}")
-            # 모델 검증 실패해도 계속 진행 (generate 시도)
-            print(f"⚠️ 모델 검증 실패했지만 계속 진행합니다: {e}")
-            logging.warning(f"모델 검증 실패했지만 계속 진행합니다: {e}")
+            print(f"Ollama 초기화 실패: {e}", file=sys.stderr)
+            self.available = False
     
     def generate(self, prompt, max_tokens=1000, temperature=0.7):
-        """
-        텍스트 생성
+        """텍스트 생성 - 응답 정리"""
+        if not self.available or not self.client:
+            return "모델을 사용할 수 없습니다. Ollama 서버가 실행 중인지 확인하세요."
         
-        Args:
-            prompt: 입력 프롬프트
-            max_tokens: 최대 토큰 수
-            temperature: 생성 온도 (0.0-1.0)
-            
-        Returns:
-            str: 생성된 텍스트
-        """
         try:
-            # generate 함수 사용 (chat 대신)
+            print(f"AI 생성 시작 (max_tokens: {max_tokens}, temperature: {temperature})", file=sys.stderr)
+            
             response = self.client.generate(
                 model=self.model_name,
                 prompt=prompt,
@@ -104,56 +65,109 @@ class TextModel:
                     'num_predict': max_tokens,
                     'temperature': temperature,
                     'top_p': 0.9,
-                    'stop': ['</끝>', '<END>', '\n\n\n']
+                    'stop': ['</끝>', '<END>']
                 }
             )
             
-            # generate 응답 구조 파싱
-            if isinstance(response, dict) and 'response' in response:
-                result = response['response'].strip()
-            elif hasattr(response, 'response'):
-                # GenerateResponse 객체인 경우
-                result = response.response.strip()
-            else:
-                # 응답 구조를 로깅하여 확인
-                logging.warning(f"예상치 못한 generate 응답 구조: {type(response)} - {response}")
-                result = str(response).strip()
-            
-            # 응답에서 실제 내용만 추출 (메타데이터 제거)
-            if 'response' in result:
-                # response 필드가 포함된 경우 실제 내용만 추출
-                try:
-                    # response: 뒤의 내용 찾기
-                    import re
-                    response_match = re.search(r"response['\"]?\s*:\s*['\"](.*?)['\"]", result, re.DOTALL)
-                    if response_match:
-                        result = response_match.group(1)
-                        # 이스케이프된 문자 처리
-                        result = result.replace('\\n', '\n').replace('\\"', '"')
-                        logging.info(f"response 필드에서 내용 추출 성공, 길이: {len(result)}")
-                    else:
-                        logging.warning("response 필드 패턴을 찾을 수 없음")
-                except Exception as e:
-                    logging.warning(f"response 필드 처리 실패: {e}")
-            
-            # GenerateResponse 객체인 경우 response 속성 직접 사용
+            # 응답 추출
             if hasattr(response, 'response'):
-                result = response.response
-                logging.info(f"GenerateResponse.response 직접 사용, 길이: {len(result)}")
+                raw_result = response.response
+            elif isinstance(response, dict) and 'response' in response:
+                raw_result = response['response']
+            else:
+                raw_result = str(response)
             
-            logging.info(f"텍스트 생성 완료: {len(result)} 문자")
-            return result
+            print(f"원본 응답 길이: {len(raw_result)} 문자", file=sys.stderr)
             
+            # 응답 정리 - 시스템 메시지 제거하고 JSON만 추출
+            cleaned_result = self._clean_response(raw_result)
+            
+            print(f"정리된 응답 길이: {len(cleaned_result)} 문자", file=sys.stderr)
+            
+            return cleaned_result
+                
         except Exception as e:
-            logging.error(f"텍스트 생성 실패: {e}")
-            # 폴백 응답
-            return f"AI 모델 호출 중 오류가 발생했습니다: {str(e)}"
+            error_msg = f"텍스트 생성 중 오류: {str(e)}"
+            print(error_msg, file=sys.stderr)
+            return error_msg
+    
+    def _clean_response(self, raw_response):
+        """응답에서 시스템 메시지 제거하고 JSON만 추출"""
+        try:
+            print("응답 정리 시작", file=sys.stderr)
+            
+            # JSON 배열이나 객체 시작점 찾기
+            json_start = -1
+            
+            # 1. 대괄호부터 찾기 (JSON 배열)
+            bracket_pos = raw_response.find('[')
+            
+            # 2. 중괄호 찾기 (JSON 객체)
+            brace_pos = raw_response.find('{')
+            
+            # 대괄호가 있고, 중괄호보다 먼저 나오면 대괄호 사용
+            if bracket_pos != -1 and (brace_pos == -1 or bracket_pos < brace_pos):
+                json_start = bracket_pos
+                print(f"JSON 배열 시작점 발견: {json_start}", file=sys.stderr)
+            elif brace_pos != -1:
+                json_start = brace_pos
+                print(f"JSON 객체 시작점 발견: {json_start}", file=sys.stderr)
+            
+            if json_start != -1:
+                # JSON 부분만 추출
+                json_part = raw_response[json_start:].strip()
+                
+                # JSON 종료점도 찾아서 더 정확하게 추출
+                if json_part.startswith('['):
+                    # 배열 종료점 찾기
+                    bracket_count = 0
+                    end_pos = -1
+                    for i, char in enumerate(json_part):
+                        if char == '[':
+                            bracket_count += 1
+                        elif char == ']':
+                            bracket_count -= 1
+                            if bracket_count == 0:
+                                end_pos = i + 1
+                                break
+                    
+                    if end_pos != -1:
+                        json_part = json_part[:end_pos]
+                        
+                elif json_part.startswith('{'):
+                    # 객체 종료점 찾기
+                    brace_count = 0
+                    end_pos = -1
+                    for i, char in enumerate(json_part):
+                        if char == '{':
+                            brace_count += 1
+                        elif char == '}':
+                            brace_count -= 1
+                            if brace_count == 0:
+                                end_pos = i + 1
+                                break
+                    
+                    if end_pos != -1:
+                        json_part = json_part[:end_pos]
+                
+                print(f"최종 JSON 추출: {json_part[:100]}...", file=sys.stderr)
+                return json_part
+            else:
+                # JSON을 찾을 수 없으면 원본 반환
+                print("JSON을 찾을 수 없어 원본 반환", file=sys.stderr)
+                return raw_response.strip()
+                
+        except Exception as e:
+            print(f"응답 정리 중 오류: {e}", file=sys.stderr)
+            return raw_response.strip()
     
     def check_health(self):
         """모델 상태 확인"""
+        if not self.available:
+            return False, "모델이 초기화되지 않았습니다"
+        
         try:
-            test_prompt = "안녕하세요"
-            response = self.generate(test_prompt, max_tokens=10)
-            return True, "모델 정상 작동"
+            test_response = self.generate("안녕하세요", max_tokens=20)
+            return True, f"모델 정상 작동: {test_response[:50]}..."
         except Exception as e:
-            return False, f"모델 오류: {e}"
+            return False, f"모델 오류: {str(e)}"

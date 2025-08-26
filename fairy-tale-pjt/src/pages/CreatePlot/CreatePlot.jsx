@@ -207,7 +207,7 @@ const CreatePlot = () => {
                 {/* 4. 하단 버튼 영역 */}
                 <div className='w-full flex justify-between px-[13px]'>
                     {/* 뒤로가기 버튼 */}
-                    <BasicButton text="다시 작성하기" onClick={handleBackToPrePlot} />
+                    <IconButton icon={<span className="material-symbols-outlined text-custom-jk_yellow" style={{ fontSize: '10px', width: '10px', height: '10px' }}>Turn Left</span>} onClick={handleBackToPrePlot} />
 
                     {/* 글 생성하기 버튼 */}
                     <BasicButton text="선택한 줄거리로 글 생성하기" onClick={handleGenerateStory} />

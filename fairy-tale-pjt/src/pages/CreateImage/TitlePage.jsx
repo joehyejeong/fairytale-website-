@@ -1,8 +1,7 @@
 import React from 'react';
 
-const TitlePage = () => {
-    const title = "제목을 입력하세요";
-    const author = "직코지음";
+const TitlePage = ({ title = "제목을 입력하세요", userName = "" }) => {
+    const author = userName ? `${userName}지음` : "직코지음";
 
     return (
         <div className="w-[29px] h-[614px] bg-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)] flex flex-col justify-center items-center">

@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import PdfButton from '../../components/PdfButton';
 import LeftPage from './LeftPage';
 import RightPage from './RightPage';
 import TitlePage from './TitlePage';
 import ImageModal from '../ImageModal/ImageModal';
+import useStoryStore from '@/stores/storyStore';
 
 const CreateImage = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [isFlipping, setIsFlipping] = useState(false);
     const [flipDirection, setFlipDirection] = useState('');
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+    // Zustand store에서 동화책 데이터 가져오기
+    const { getBookData, getTitle, getPageContent, getName } = useStoryStore();
+    const bookData = getBookData();
+    const title = getTitle();
+    const userName = getName();
 
     const pages = [
         { type: 'cover', title: '표지' },
@@ -22,6 +29,15 @@ const CreateImage = () => {
         { type: 'content', title: '11-12페이지' },
         { type: 'content', title: '13페이지' }
     ];
+
+    // 페이지별 내용 매핑 (좌우 페이지)
+    const getPageContentForDisplay = (pageIndex) => {
+        if (pageIndex === 0) return ''; // 표지는 빈 내용
+
+        // 페이지 인덱스에 따라 적절한 내용 반환
+        // 0: 표지, 1: 1-2페이지, 2: 3-4페이지, 3: 5-6페이지, 4: 7-8페이지, 5: 9-10페이지, 6: 11-12페이지, 7: 13페이지
+        return getPageContent(pageIndex) || '';
+    };
 
     const handlePrevPage = () => {
         if (isFlipping || currentPage === 0) return;
@@ -73,10 +89,16 @@ const CreateImage = () => {
                         <LeftPage isCover={true} onImageClick={handleImageClick} />
                     </div>
                     <div className="book-spine-shadow">
-                        <TitlePage />
+                        <TitlePage title={title} userName={userName} />
                     </div>
                     <div className={`book-page right-page page-shadow page-depth ${isFlipping && flipDirection === 'right' ? 'flipping-right' : ''}`}>
-                        <RightPage isCover={true} onImageClick={handleImageClick} />
+                        <RightPage
+                            isCover={true}
+                            content={getPageContentForDisplay(currentPage)}
+                            onImageClick={handleImageClick}
+                            title={title}
+                            userName={userName}
+                        />
                     </div>
                 </div>
             );
@@ -87,14 +109,20 @@ const CreateImage = () => {
                         <LeftPage
                             isCover={false}
                             isLastPage={currentPageData.title === '13페이지'}
+                            content={getPageContentForDisplay(currentPage)}
                             onImageClick={handleImageClick}
+                            title={title}
+                            userName={userName}
                         />
                     </div>
                     <div className={`book-page right-page page-shadow page-depth ${isFlipping && flipDirection === 'right' ? 'flipping-right' : ''}`}>
                         <RightPage
                             isCover={false}
                             isLastPage={currentPageData.title === '13페이지'}
+                            content={getPageContentForDisplay(currentPage)}
                             onImageClick={handleImageClick}
+                            title={title}
+                            userName={userName}
                         />
                     </div>
                 </div>
@@ -106,7 +134,7 @@ const CreateImage = () => {
         <div className="flex flex-col justify-center items-center h-[calc(100vh-98px)]">
             {/* 제목 입력 텍스트 - 정중앙 */}
             <div className="font-noto font-medium text-2xl text-black mb-5">
-                제목을 입력하세요
+                {title || '제목을 입력하세요'}
             </div>
 
             {/* 책과 PDF 버튼을 감싸는 컨테이너 */}

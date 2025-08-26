@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import sunIcon from '@/assets/sun.svg';
 import IconButton from '@/components/IconButton';
 
-const RightPage = ({ isCover = false, isLastPage = false, content = "오늘은 정말 비가 많이 오는 날이었어요.\n지우는 동생을 보며 모두가 우산을 쓰고 있네요.\n지우는 학교에 가려고 집을 나섰을 때 깜짝 놀랐어요.\n우산을 잃어버렸거든요.\n'어떻게 해야 하지?' 지우는 정말 걱정이 많았어요.\n하지만 어쩔 수 없이 비 속을 걸어가기 시작했어요.", onImageClick }) => {
+const RightPage = ({ isCover = false, isLastPage = false, content = "오늘은 정말 비가 많이 오는 날이었어요.\n지우는 동생을 보며 모두가 우산을 쓰고 있네요.\n지우는 학교에 가려고 집을 나섰을 때 깜짝 놀랐어요.\n우산을 잃어버렸거든요.\n'어떻게 해야 하지?' 지우는 정말 걱정이 많았어요.\n하지만 어쩔 수 없이 비 속을 걸어가기 시작했어요.", onImageClick, title = "", userName = "" }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedContent, setEditedContent] = useState(content);
+
+    // content가 변경되면 editedContent도 업데이트
+    React.useEffect(() => {
+        setEditedContent(content);
+    }, [content]);
 
     const handleEditClick = () => {
         setIsEditing(true);
@@ -31,14 +36,14 @@ const RightPage = ({ isCover = false, isLastPage = false, content = "오늘은 �
                     {/* 제목 - 클릭 불가능 */}
                     <div className="mt-[20px] text-center">
                         <h1 className="text-4xl font-bold font-noto text-black">
-                            [제목을 입력해 주세요]
+                            {title || '[제목을 입력해 주세요]'}
                         </h1>
                     </div>
 
                     {/* 저자 - 클릭 불가능 */}
                     <div className="mt-[20px] text-center">
                         <p className="text-[16px] font-medium font-noto text-black">
-                            [직코] 지음
+                            {userName ? `[${userName}] 지음` : '[직코] 지음'}
                         </p>
                     </div>
                 </div>
@@ -77,7 +82,7 @@ const RightPage = ({ isCover = false, isLastPage = false, content = "오늘은 �
                             isEditing ? (
                                 <span className="material-symbols-outlined text-custom-jk_yellow" style={{ fontSize: '23px', width: '23px', height: '23px' }}>save</span>
                             ) : (
-                                <span className="material-symbols-outlined text-custom-jk_yellow" style={{ fontSize: '23px', width: '23px', height: '23px' }}>edit</span>
+                                <span className="text-custom-jk_yellow" style={{ fontSize: '23px', width: '23px', height: '23px' }}>edit</span>
                             )
                         }
                         onClick={isEditing ? handleSaveClick : handleEditClick}

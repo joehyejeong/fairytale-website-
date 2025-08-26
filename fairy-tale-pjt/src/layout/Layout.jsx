@@ -53,7 +53,7 @@ const Layout = ({ children }) => {
             <main className={`${progressType ? 'pt-[50px]' : ''} min-w-[1026px]`}>
                 {children}
             </main>
-            <UnderCharacter speechBubbleText={speechBubbleText} />
+            {/* <UnderCharacter speechBubbleText={speechBubbleText} /> */}
         </div>
     );
 };

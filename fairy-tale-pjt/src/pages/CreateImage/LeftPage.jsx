@@ -1,7 +1,8 @@
 import React from 'react';
 import sunIcon from '@/assets/sun.svg';
+import { getCurrentDateKorean } from '@/lib/dateUtils';
 
-const LeftPage = ({ isCover = false, isLastPage = false, onImageClick }) => {
+const LeftPage = ({ isCover = false, isLastPage = false, content = "", onImageClick, title = "", userName = "" }) => {
     if (isLastPage) {
         return (
             <div className="w-[599px] h-[614px] p-[12px] bg-white drop-shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] relative">
@@ -16,7 +17,7 @@ const LeftPage = ({ isCover = false, isLastPage = false, onImageClick }) => {
 
                     {/* (2) 제목 텍스트 */}
                     <div className="mt-[12px] font-noto font-medium text-lg text-black">
-                        제목을 입력해주세요
+                        {title || '제목을 입력해주세요'}
                     </div>
 
                     {/* (3) 메타데이터 3개 */}
@@ -27,7 +28,7 @@ const LeftPage = ({ isCover = false, isLastPage = false, onImageClick }) => {
                                 발행일
                             </span>
                             <span className="ml-[17px] font-noto font-light text-[13px] text-black">
-                                2025년 00월 00일
+                                {getCurrentDateKorean()}
                             </span>
                         </div>
 
@@ -37,7 +38,7 @@ const LeftPage = ({ isCover = false, isLastPage = false, onImageClick }) => {
                                 지은이
                             </span>
                             <span className="ml-[17px] font-noto font-light text-[13px] text-black">
-                                직코
+                                {userName || '직코'}
                             </span>
                         </div>
 

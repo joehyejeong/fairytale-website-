@@ -135,8 +135,8 @@ const CreatePlot = () => {
 
     // 한 줄 텍스트 함수
     const renderTextLine = (label, value, onChange) => (
-        <div className="flex items-center mb-[19px]">
-            <span className="text-xl font-medium font-noto text-black mr-[28px]">
+        <div className="flex mb-[19px]">
+            <span className="w-[50px] text-xl font-medium font-noto text-black mr-[28px]">
                 {label}
             </span>
             {isEditing ? (
@@ -144,10 +144,10 @@ const CreatePlot = () => {
                     type="text"
                     value={value}
                     onChange={onChange}
-                    className="text-base font-light font-noto text-black bg-white border border-custom-jk_yellow rounded-[3px] px-[10px] py-[5px] outline-none"
+                    className="text-left text-base font-light font-noto text-black bg-white border border-custom-jk_yellow rounded-[3px] px-[10px] py-[5px] outline-none"
                 />
             ) : (
-                <span className="text-base font-light font-noto text-black">
+                <span className="w-[320px] text-left text-base font-light font-noto text-black">
                     {value}
                 </span>
             )}
@@ -210,8 +210,8 @@ const CreatePlot = () => {
                     {/* 3-2. 오른쪽 패널 (줄거리 내용) */}
                     <div className="ml-[13px] flex-1 bg-custom-jk_light_yellow border border-custom-jk_yellow rounded-[5px] p-[25px] relative">
                         <div className='flex justify-between'>
-                            <h3 className="w-[100px] text-xl font-medium font-noto text-black mb-[25px]">
-                                줄거리 1
+                            <h3 className="text-xl font-medium font-noto text-black mb-[25px]">
+                                줄거리
                             </h3>
                             {/* 줄거리 1개만 표시하므로 선택 버튼 제거 */}
                         </div>

@@ -20,7 +20,7 @@ const StoryCard = ({ pageNumber, initialContent = '[ai 연결 안 됨]' }) => {
     };
 
     return (
-        <div className="w-[402px] h-[calc(100vh/2.2)] bg-custom-jk_light_yellow rounded-[5px] relative flex-shrink-0 text-left">
+        <div className="w-[402px] h-[350px] bg-custom-jk_light_yellow rounded-[5px] relative flex-shrink-0 text-left">
             {/* 페이지 번호 */}
             <div className="pt-[25px] pl-[25px]">
                 <h3 className="text-xl font-medium font-noto text-black">
@@ -45,7 +45,7 @@ const StoryCard = ({ pageNumber, initialContent = '[ai 연결 안 됨]' }) => {
             </div>
 
             {/* Edit/Save 아이콘 */}
-            <div className="absolute bottom-[15px] right-[15px]">
+            <div className="absolute top-[10px] right-[10px]">
                 <IconButton
                     icon={
                         isEditing ? (

@@ -30,6 +30,10 @@ const useStoryStore = create(
                 page6: ''
             },
 
+            // 이미지 관련 추가 상태
+            currentPageIndex: 0,
+            appliedImages: {}, // 페이지별 적용된 이미지 경로 저장
+
             // 로딩 상태
             isLoading: false,
 
@@ -90,11 +94,31 @@ const useStoryStore = create(
                 return get().bookData;
             },
 
-            // 특정 페이지 내용 가져오기
+            // 특정 페이지 내용 가져오기 (기존 방식과 새로운 방식 모두 지원)
             getPageContent: (pageNumber) => {
                 const state = get();
-                const pageKey = `page${pageNumber}`;
-                return state.bookData[pageKey] || '';
+
+                // 기존 방식 (pageNumber가 1-6)
+                if (pageNumber >= 1 && pageNumber <= 6) {
+                    const pageKey = `page${pageNumber}`;
+                    return state.bookData[pageKey] || '';
+                }
+
+                // 새로운 방식 (CreateImage에서 사용하는 페이지 인덱스)
+                if (pageNumber === 0) return ''; // 표지
+
+                // 페이지 인덱스를 실제 내용으로 매핑
+                const pageMapping = {
+                    1: state.bookData.page1 || '',  // 1-2페이지 -> page1
+                    2: state.bookData.page2 || '',  // 3-4페이지 -> page2
+                    3: state.bookData.page3 || '',  // 5-6페이지 -> page3
+                    4: state.bookData.page4 || '',  // 7-8페이지 -> page4
+                    5: state.bookData.page5 || '',  // 9-10페이지 -> page5
+                    6: state.bookData.page6 || '',  // 11-12페이지 -> page6
+                    7: '' // 13페이지 (마지막 페이지)
+                };
+
+                return pageMapping[pageNumber] || '';
             },
 
             // 제목 가져오기
@@ -110,6 +134,33 @@ const useStoryStore = create(
             // 이름 가져오기
             getName: () => {
                 return get().name;
+            },
+
+            // 현재 페이지 인덱스 설정 (새로 추가)
+            setCurrentPageIndex: (index) => {
+                set({ currentPageIndex: index });
+            },
+
+            // 현재 페이지 인덱스 가져오기 (새로 추가)
+            getCurrentPageIndex: () => {
+                return get().currentPageIndex;
+            },
+
+            // 적용된 이미지 저장 (새로 추가)
+            setAppliedImage: (pageNumber, imagePath) => {
+                const state = get();
+                set({
+                    appliedImages: {
+                        ...state.appliedImages,
+                        [pageNumber]: imagePath
+                    }
+                });
+            },
+
+            // 적용된 이미지 가져오기 (새로 추가)
+            getAppliedImage: (pageNumber) => {
+                const state = get();
+                return state.appliedImages[pageNumber] || null;
             },
 
             // 상태 초기화
@@ -128,6 +179,8 @@ const useStoryStore = create(
                         page6: ''
                     },
                     name: '',
+                    currentPageIndex: 0,
+                    appliedImages: {},
                     isLoading: false,
                     error: null
                 });
@@ -149,7 +202,9 @@ const useStoryStore = create(
                 userInput: state.userInput,
                 selectedPlotIndex: state.selectedPlotIndex,
                 bookData: state.bookData,
-                name: state.name
+                name: state.name,
+                currentPageIndex: state.currentPageIndex,
+                appliedImages: state.appliedImages
             })
         }
     )

@@ -1,4 +1,4 @@
-// electron/main.cjs - Ollama gemma3:4b 모델용
+// electron/main.cjs - 이미지 생성 기능이 추가된 버전
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -223,74 +223,6 @@ ipcMain.handle('expand-story', async (event, { idea, style }) => {
     });
 });
 
-// 기본 폴백 응답 생성
-function createFallbackResponse(idea, style, errorMsg = '') {
-    console.log('🔄 폴백 응답 생성:', { idea, style, errorMsg });
-
-    return [{
-        title: `${idea}의 이야기`,
-        character: "용감한 주인공",
-        background: "신비로운 세계",
-        plot: `${idea}를 바탕으로 한 흥미진진한 모험이 시작됩니다. 주인공은 여러 도전을 극복하며 성장해나갑니다.`,
-        lesson: "용기와 지혜로 어려움을 극복할 수 있습니다",
-        style: style || 'classic',
-        processing_status: "fallback",
-        error: errorMsg
-    }];
-}
-
-// 내용이 있는 폴백 응답 생성
-function createFallbackResponseWithContent(idea, style, content) {
-    console.log('📝 내용 기반 폴백 응답 생성');
-
-    return [{
-        title: `${idea}`,
-        character: "AI 작가",
-        background: "창작의 공간",
-        plot: content.length > 500 ? content.substring(0, 500) + "..." : content,
-        lesson: "AI와 함께 만든 특별한 이야기",
-        style: style || 'classic',
-        processing_status: "content_fallback"
-    }];
-}
-
-// 동화책 폴백 응답 생성
-function createFallbackBook(data, errorMsg = '') {
-    console.log('🔄 동화책 폴백 응답 생성:', { data, errorMsg });
-
-    return {
-        title: `${data.title || '동화책'} (폴백)`,
-        pages: [
-            { page: 1, content: "옛날 옛적에 주인공이 살고 있었습니다. 매일 새로운 모험을 꿈꾸며 지냈습니다." },
-            { page: 2, content: "어느 날, 주인공에게 특별한 일이 일어났습니다. 모험의 시작이었습니다." },
-            { page: 3, content: "주인공은 용기를 내어 모험을 시작했습니다. 길에서 만난 친구들과 함께 어려움을 극복해 나갔습니다." },
-            { page: 4, content: "여행 중에 여러 도전이 기다리고 있었습니다. 하지만 주인공은 포기하지 않고 계속 앞으로 나아갔습니다." },
-            { page: 5, content: "마침내 주인공은 목표를 달성했습니다. 그 과정에서 진정한 용기와 우정의 소중함을 배웠습니다." },
-            { page: 6, content: "주인공은 집으로 돌아와 가족과 친구들에게 모험 이야기를 들려주었습니다. 그리고 모두 행복하게 살았답니다." }
-        ],
-        processing_status: "fallback",
-        error: errorMsg
-    };
-}
-
-// 내용이 있는 동화책 폴백 응답 생성
-function createFallbackBookWithContent(data, content) {
-    console.log('📝 내용 기반 동화책 폴백 응답 생성');
-
-    return {
-        title: data.title || 'AI가 만든 동화책',
-        pages: [
-            { page: 1, content: content.length > 200 ? content.substring(0, 200) + "..." : content },
-            { page: 2, content: "이야기가 계속됩니다..." },
-            { page: 3, content: "모험의 절정에 도달했습니다." },
-            { page: 4, content: "문제를 해결하기 위해 노력합니다." },
-            { page: 5, content: "목표를 달성하고 교훈을 얻습니다." },
-            { page: 6, content: "행복한 결말로 이야기를 마칩니다." }
-        ],
-        processing_status: "content_fallback"
-    };
-}
-
 // 동화책 생성 핸들러
 ipcMain.handle('generate-book', async (event, data) => {
     console.log('=== 동화책 생성 시작 ===');
@@ -398,12 +330,142 @@ ipcMain.handle('generate-book', async (event, data) => {
     });
 });
 
-ipcMain.handle('generate-image', async (event, data) => {
-    console.log('generate-image 호출됨:', data);
-    return {
-        imageUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiZmMGYwZjAiLz48L3N2Zz4=",
-        pageNumber: data.pageNumber || 1
-    };
+// 이미지 생성 핸들러 (새로 추가)
+ipcMain.handle('generate-image', async (event, { description, style, pageNumber }) => {
+    console.log('=== 이미지 생성 시작 ===');
+    console.log('입력 데이터:', { description, style, pageNumber });
+
+    return new Promise(async (resolve) => {
+        // Python 스크립트 실행
+        const pythonScript = path.join(__dirname, '../python/controllers/image_generator.py');
+        const pythonExecutable = findPythonExecutable();
+
+        console.log('Python 실행기:', pythonExecutable);
+        console.log('Python 스크립트:', pythonScript);
+
+        // 파일 존재 확인
+        if (!fs.existsSync(pythonScript)) {
+            console.error('❌ Python 스크립트를 찾을 수 없음:', pythonScript);
+            resolve(createFallbackImageResponse(pageNumber, '이미지 생성 스크립트를 찾을 수 없습니다.'));
+            return;
+        }
+
+        const python = spawn(pythonExecutable, [
+            pythonScript,
+            description || '기본 이미지',
+            style || '수채화 일러스트',
+            pageNumber.toString()
+        ], {
+            env: {
+                ...process.env,
+                PYTHONIOENCODING: 'utf-8',
+                PYTHONPATH: path.join(__dirname, '../python')
+            },
+            cwd: path.join(__dirname, '../python'),
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        let stdout = '';
+        let stderr = '';
+        let hasOutput = false;
+
+        python.stdout.on('data', (data) => {
+            const output = data.toString();
+            stdout += output;
+            hasOutput = true;
+            console.log('Python 이미지 stdout:', output);
+        });
+
+        python.stderr.on('data', (data) => {
+            const errorOutput = data.toString();
+            stderr += errorOutput;
+            console.log('Python 이미지 stderr:', errorOutput);
+        });
+
+        python.on('error', (err) => {
+            console.error('❌ 이미지 생성 프로세스 에러:', err);
+            resolve(createFallbackImageResponse(pageNumber, `Python 실행 오류: ${err.message}`));
+        });
+
+        python.on('close', (code) => {
+            console.log('🐍 이미지 생성 프로세스 종료, 코드:', code);
+            console.log('📊 이미지 생성 결과 길이:', stdout.length);
+
+            if (code === 0 && hasOutput && stdout.trim()) {
+                try {
+                    // JSON 파싱 시도
+                    const result = JSON.parse(stdout.trim());
+                    console.log('✅ 이미지 생성 JSON 파싱 성공');
+                    console.log('🖼️ 이미지 생성 결과:', result);
+
+                    resolve(result);
+                    return;
+                } catch (parseError) {
+                    console.log('❌ 이미지 생성 JSON 파싱 실패:', parseError.message);
+                    console.log('원본 출력:', stdout.substring(0, 200));
+                }
+            }
+
+            // 실패한 경우
+            console.log('❌ 이미지 생성 실패, 폴백 응답 생성');
+            const errorInfo = stderr || `Python 종료 코드: ${code}`;
+            resolve(createFallbackImageResponse(pageNumber, errorInfo));
+        });
+
+        console.log('⏳ 이미지 생성 중...');
+    });
+});
+
+// 이미지 적용하기 핸들러 (새로 추가)
+ipcMain.handle('apply-image', async (event, { pageNumber }) => {
+    console.log('=== 이미지 적용 시작 ===');
+    console.log('페이지 번호:', pageNumber);
+
+    try {
+        // temps 폴더에서 saves 폴더로 이미지 이동
+        const projectRoot = path.join(__dirname, '..');
+        const tempsDir = path.join(projectRoot, 'src', 'assets', 'temps');
+        const savesDir = path.join(projectRoot, 'src', 'assets', 'saves');
+
+        // saves 폴더가 없으면 생성
+        if (!fs.existsSync(savesDir)) {
+            fs.mkdirSync(savesDir, { recursive: true });
+        }
+
+        const imageFileName = `${String(pageNumber).padStart(2, '0')}.png`;
+        const tempPath = path.join(tempsDir, imageFileName);
+        const savePath = path.join(savesDir, imageFileName);
+
+        if (fs.existsSync(tempPath)) {
+            // 파일 이동 (복사 후 원본 삭제)
+            fs.copyFileSync(tempPath, savePath);
+            fs.unlinkSync(tempPath);
+
+            console.log('✅ 이미지 적용 완료:', savePath);
+
+            return {
+                success: true,
+                imagePath: savePath,
+                pageNumber: pageNumber,
+                message: '이미지가 성공적으로 적용되었습니다.'
+            };
+        } else {
+            console.error('❌ 임시 이미지 파일을 찾을 수 없음:', tempPath);
+            return {
+                success: false,
+                error: '임시 이미지 파일을 찾을 수 없습니다.',
+                pageNumber: pageNumber
+            };
+        }
+
+    } catch (error) {
+        console.error('❌ 이미지 적용 중 오류:', error);
+        return {
+            success: false,
+            error: `이미지 적용 실패: ${error.message}`,
+            pageNumber: pageNumber
+        };
+    }
 });
 
 // AI 연결 상태 테스트 핸들러
@@ -514,6 +576,87 @@ ipcMain.handle('save-file', async (event, data) => {
         return { success: false, error: error.message };
     }
 });
+
+// 기본 폴백 응답 생성 함수들
+function createFallbackResponse(idea, style, errorMsg = '') {
+    console.log('🔄 폴백 응답 생성:', { idea, style, errorMsg });
+
+    return [{
+        title: `${idea}의 이야기`,
+        character: "용감한 주인공",
+        background: "신비로운 세계",
+        plot: `${idea}를 바탕으로 한 흥미진진한 모험이 시작됩니다. 주인공은 여러 도전을 극복하며 성장해나갑니다.`,
+        lesson: "용기와 지혜로 어려움을 극복할 수 있습니다",
+        style: style || 'classic',
+        processing_status: "fallback",
+        error: errorMsg
+    }];
+}
+
+// 내용이 있는 폴백 응답 생성
+function createFallbackResponseWithContent(idea, style, content) {
+    console.log('📝 내용 기반 폴백 응답 생성');
+
+    return [{
+        title: `${idea}`,
+        character: "AI 작가",
+        background: "창작의 공간",
+        plot: content.length > 500 ? content.substring(0, 500) + "..." : content,
+        lesson: "AI와 함께 만든 특별한 이야기",
+        style: style || 'classic',
+        processing_status: "content_fallback"
+    }];
+}
+
+// 동화책 폴백 응답 생성
+function createFallbackBook(data, errorMsg = '') {
+    console.log('🔄 동화책 폴백 응답 생성:', { data, errorMsg });
+
+    return {
+        title: `${data.title || '동화책'} (폴백)`,
+        pages: [
+            { page: 1, content: "옛날 옛적에 주인공이 살고 있었습니다. 매일 새로운 모험을 꿈꾸며 지냈습니다." },
+            { page: 2, content: "어느 날, 주인공에게 특별한 일이 일어났습니다. 모험의 시작이었습니다." },
+            { page: 3, content: "주인공은 용기를 내어 모험을 시작했습니다. 길에서 만난 친구들과 함께 어려움을 극복해 나갔습니다." },
+            { page: 4, content: "여행 중에 여러 도전이 기다리고 있었습니다. 하지만 주인공은 포기하지 않고 계속 앞으로 나아갔습니다." },
+            { page: 5, content: "마침내 주인공은 목표를 달성했습니다. 그 과정에서 진정한 용기와 우정의 소중함을 배웠습니다." },
+            { page: 6, content: "주인공은 집으로 돌아와 가족과 친구들에게 모험 이야기를 들려주었습니다. 그리고 모두 행복하게 살았답니다." }
+        ],
+        processing_status: "fallback",
+        error: errorMsg
+    };
+}
+
+// 내용이 있는 동화책 폴백 응답 생성
+function createFallbackBookWithContent(data, content) {
+    console.log('📝 내용 기반 동화책 폴백 응답 생성');
+
+    return {
+        title: data.title || 'AI가 만든 동화책',
+        pages: [
+            { page: 1, content: content.length > 200 ? content.substring(0, 200) + "..." : content },
+            { page: 2, content: "이야기가 계속됩니다..." },
+            { page: 3, content: "모험의 절정에 도달했습니다." },
+            { page: 4, content: "문제를 해결하기 위해 노력합니다." },
+            { page: 5, content: "목표를 달성하고 교훈을 얻습니다." },
+            { page: 6, content: "행복한 결말로 이야기를 마칩니다." }
+        ],
+        processing_status: "content_fallback"
+    };
+}
+
+// 이미지 생성 폴백 응답 생성 (새로 추가)
+function createFallbackImageResponse(pageNumber, errorMsg = '') {
+    console.log('🔄 이미지 생성 폴백 응답 생성:', { pageNumber, errorMsg });
+
+    return {
+        success: false,
+        error: errorMsg,
+        pageNumber: pageNumber,
+        fallback: true,
+        message: "이미지 생성에 실패했습니다. 기본 이미지가 표시됩니다."
+    };
+}
 
 app.whenReady().then(createWindow);
 

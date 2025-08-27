@@ -1,18 +1,101 @@
 import React from 'react';
 import sunIcon from '@/assets/sun.svg';
 import { getCurrentDateKorean } from '@/lib/dateUtils';
+import useStoryStore from '@/stores/storyStore';
 
-const LeftPage = ({ isCover = false, isLastPage = false, content = "", onImageClick, title = "", userName = "" }) => {
+const LeftPage = ({
+    isCover = false,
+    isLastPage = false,
+    onImageClick,
+    title = "",
+    userName = "",
+    appliedImage = null,
+    pageNumber = 0
+}) => {
+
+    // 스토어에서 함수 가져오기
+    const { getAppliedImage } = useStoryStore();
+
+    const renderImage = () => {
+        // props로 전달된 appliedImage 또는 스토어에서 가져온 이미지 사용
+        let imageUrl = appliedImage;
+
+        if (!imageUrl && pageNumber) {
+            const storedImage = getAppliedImage(pageNumber);
+            console.log(`LeftPage - 페이지 ${pageNumber}의 저장된 이미지:`, storedImage);
+            if (storedImage && storedImage !== 'null') {
+                // 파일 경로에서 파일명만 추출하여 형식 확인
+                const fileName = storedImage.split('/').pop() || storedImage.split('\\').pop();
+                console.log(`LeftPage - 파일명:`, fileName);
+
+                // temps 폴더의 이미지는 @/assets/temps 경로로 접근
+                if (storedImage.includes('temps')) {
+                    imageUrl = `@/assets/temps/${fileName}`;
+                } else {
+                    imageUrl = `file://${storedImage}`;
+                }
+            }
+        }
+
+        console.log(`LeftPage - 최종 이미지 URL:`, imageUrl, 'appliedImage:', appliedImage);
+
+        if (imageUrl && imageUrl !== 'file://null' && imageUrl !== 'null') {
+            return (
+                <img
+                    src={imageUrl}
+                    alt="Applied"
+                    className="w-full h-full object-cover object-center"
+                    style={{
+                        borderRadius: isCover ? '8px' : '0px'
+                    }}
+                    onError={(e) => {
+                        // 이미지 로드 실패 시 기본 아이콘으로 대체
+                        console.error('이미지 로드 실패:', imageUrl);
+                        e.target.style.display = 'none';
+                        const parent = e.target.parentElement;
+                        if (parent && !parent.querySelector('.fallback-icon')) {
+                            const fallback = document.createElement('img');
+                            fallback.src = sunIcon;
+                            fallback.alt = 'Sun';
+                            fallback.className = 'fallback-icon';
+                            fallback.style.width = isCover ? '67px' : '67px';
+                            fallback.style.height = isCover ? '67px' : '67px';
+                            parent.appendChild(fallback);
+                        }
+                    }}
+                />
+            );
+        } else {
+            // 기본 태양 아이콘
+            return (
+                <img
+                    src={sunIcon}
+                    alt="Sun"
+                    className={`${isCover ? 'w-[67px] h-[67px]' : 'w-[67px] h-[67px]'}`}
+                />
+            );
+        }
+    };
+
     if (isLastPage) {
         return (
             <div className="w-[499px] h-[512px] p-[12px] bg-white drop-shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] relative">
                 <div className="flex flex-col items-start pt-[140px]">
                     {/* (1) 이미지 공간 */}
                     <div
-                        className="w-[160px] h-[158px] bg-custom-jk_light_yellow rounded-lg flex justify-center items-center cursor-pointer transition-transform"
+                        className="w-[160px] h-[158px] bg-custom-jk_light_yellow rounded-lg flex justify-center items-center cursor-pointer transition-transform hover:scale-105 relative overflow-hidden"
                         onClick={onImageClick}
                     >
-                        <img src={sunIcon} alt="Sun" className="w-[67px] h-[67px]" />
+                        {renderImage()}
+
+                        {/* 이미지가 있을 때 호버 오버레이 */}
+                        {(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && (
+                            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex justify-center items-center">
+                                <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 text-white text-xs bg-black bg-opacity-70 px-2 py-1 rounded">
+                                    이미지 변경
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* (2) 제목 텍스트 */}
@@ -62,18 +145,44 @@ const LeftPage = ({ isCover = false, isLastPage = false, content = "", onImageCl
             {isCover ? (
                 /* 표지인 경우 - jk_light_yellow 배경 부분만 클릭 가능 */
                 <div
-                    className="w-[160px] h-[160px] bg-custom-jk_light_yellow rounded-lg flex justify-center items-center cursor-pointer transition-transform"
+                    className="w-[160px] h-[160px] bg-custom-jk_light_yellow rounded-lg flex justify-center items-center cursor-pointer transition-transform hover:scale-105 relative overflow-hidden"
                     onClick={onImageClick}
                 >
-                    <img src={sunIcon} alt="Sun" className="w-[67px] h-[67px]" />
+                    {renderImage()}
+
+                    {/* 이미지가 있을 때 호버 오버레이 */}
+                    {(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && (
+                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex justify-center items-center">
+                            <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 text-white text-xs bg-black bg-opacity-70 px-2 py-1 rounded">
+                                이미지 변경
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
-                /* 일반 페이지인 경우 - jk_light_yellow 배경 부분만 클릭 가능 */
+                /* 일반 페이지인 경우 - 전체 배경이 클릭 가능 */
                 <div
-                    className="w-full h-full flex justify-center items-center cursor-pointer transition-transform"
+                    className="w-full h-full flex justify-center items-center cursor-pointer transition-transform hover:scale-[1.02] relative overflow-hidden"
                     onClick={onImageClick}
+                    style={{
+                        backgroundImage: (appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) ?
+                            `url(${appliedImage || `file://${getAppliedImage(pageNumber)}`})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}
                 >
-                    <img src={sunIcon} alt="Sun" className="w-[67px] h-[67px]" />
+                    {/* 이미지가 없을 때만 아이콘 표시 */}
+                    {!(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && renderImage()}
+
+                    {/* 이미지가 있을 때 오버레이 효과를 위한 투명 배경 */}
+                    {(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && (
+                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex justify-center items-center">
+                            <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 text-white bg-black bg-opacity-50 px-3 py-1 rounded text-sm">
+                                이미지 변경
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

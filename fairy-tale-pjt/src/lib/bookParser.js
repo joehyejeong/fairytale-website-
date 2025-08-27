@@ -152,16 +152,18 @@ export const extractPagesFromText = (text) => {
             /"page":\s*6\s*,\s*"content":\s*"((?:[^"\\]|\\.)*)"/,
             // 백틱과 특수 문자가 포함된 패턴
             /"page"\s*:\s*6\s*,\s*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*?)"\s*\\n.*?```/,
-            // \n]\n}\n```" 끝 패턴 전용 - 기본
+            // \n]\n}\n```" 끝 패턴 전용
             /"page"\s*:\s*6\s*,\s*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*?)"\s*\\n\s*\]\s*\\n\s*\}\s*\\n\s*```"/,
-            // \n]\n}\n```" 끝 패턴 - 여러 공백 허용
-            /"page"\s*:\s*6\s*,\s*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*?)"\s*\\n\s+\]\s*\\n\s*\}\s*\\n\s*```"/,
-            // \n]\n}\n```" 끝 패턴 - 매우 관대한 공백 처리
-            /"page"\s*:\s*6\s*,\s*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*?)"[\s\n]*\][\s\n]*\}[\s\n]*```"/,
             // 더 관대한 패턴 - 6페이지만 대상
             /\{\s*"page"\s*:\s*6[^}]*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*?)"/,
             // 매우 관대한 패턴 - content 뒤에 뭐가 와도 상관없음
-            /"page"\s*:\s*6.*?"content"\s*:\s*"(.*?)"/s
+            /"page"\s*:\s*6.*?"content"\s*:\s*"(.*?)"/s,
+            // 6페이지 전용 - 특수한 끝 패턴 처리
+            /"page":\s*6\s*,\s*"content":\s*"([^"]*(?:\\.[^"]*)*?)(?:\\n\s*\]\s*\\n\s*\}\s*\\n\s*```"|")/,
+            // 6페이지 전용 - 가장 관대한 패턴
+            /"page":\s*6\s*,\s*"content":\s*"([^"]*?)(?:\\n\s*\]\s*\\n\s*\}\s*\\n\s*```"|")\s*\}\s*,\s*\\n\s*$/,
+            // 6페이지 전용 - 끝에 특수 문자열이 있는 경우
+            /"page":\s*6\s*,\s*"content":\s*"([^"]*?)(?:\\n\s*\]\s*\\n\s*\}\s*\\n\s*```"|")\s*\}\s*,\s*\\n\s*$/m
         ];
 
         for (const pattern of page6SpecialPatterns) {
@@ -181,6 +183,74 @@ export const extractPagesFromText = (text) => {
                     content: content
                 });
                 break;
+            }
+        }
+
+        // 여전히 실패한 경우, 수동으로 6페이지 찾기
+        if (!pages.find(p => p.page === 6)) {
+            console.log('🔄 6페이지 수동 추출 시도...');
+
+            // 6페이지 시작 부분 찾기
+            const page6Start = text.indexOf('"page": 6, "content":');
+            if (page6Start !== -1) {
+                console.log('📍 6페이지 시작 위치:', page6Start);
+
+                // content 시작 따옴표 찾기
+                const contentStart = text.indexOf('"', page6Start + 20);
+                if (contentStart !== -1) {
+                    console.log('📍 content 시작 위치:', contentStart);
+
+                    // 6페이지가 마지막 페이지이므로 끝까지 읽기
+                    let contentEnd = text.length;
+
+                    // 가능한 끝 패턴들 찾기
+                    const endPatterns = [
+                        '\\n    ]\\n}\\n```"',
+                        '\\n    ]\\n}\\n```"',
+                        '\\n    ]\\n}\\n```',
+                        '\\n    ]\\n}',
+                        '\\n    ]',
+                        '\\n}',
+                        '```'
+                    ];
+
+                    for (const endPattern of endPatterns) {
+                        const endIndex = text.indexOf(endPattern, contentStart);
+                        if (endIndex !== -1 && endIndex < contentEnd) {
+                            contentEnd = endIndex;
+                            console.log('📍 content 끝 패턴 발견:', endPattern, '위치:', endIndex);
+                        }
+                    }
+
+                    const rawContent = text.substring(contentStart + 1, contentEnd);
+                    console.log('📍 추출된 원본 content 길이:', rawContent.length);
+                    console.log('📍 content 시작 부분:', rawContent.substring(0, 100));
+                    console.log('📍 content 끝 부분:', rawContent.substring(rawContent.length - 100));
+
+                    // content 정리
+                    let cleanContent = rawContent
+                        .replace(/\\"/g, '"')
+                        .replace(/\\\\/g, '\\')
+                        .replace(/\\n/g, ' ')
+                        .trim();
+
+                    // 마지막에 붙는 불필요한 문자들 제거
+                    cleanContent = cleanContent
+                        .replace(/"\s*\}\s*\]\s*\}\s*$/, '')  // "} ] } 제거
+                        .replace(/"\s*\}\s*\]\s*$/, '')       // "} ] 제거
+                        .replace(/"\s*\}\s*$/, '')            // "} 제거
+                        .replace(/"\s*$/, '')                 // 마지막 " 제거
+                        .trim();
+
+                    console.log('✅ 6페이지 수동 추출 성공');
+                    console.log('6페이지 내용 (수동 추출):', cleanContent.substring(0, 200));
+                    console.log('6페이지 내용 (끝 부분):', cleanContent.substring(cleanContent.length - 100));
+
+                    pages.push({
+                        page: 6,
+                        content: cleanContent
+                    });
+                }
             }
         }
     }
@@ -207,17 +277,7 @@ export const parseBookData = (bookData) => {
     // raw_response가 있으면 JSON 파싱
     if (bookData.raw_response) {
         console.log('📝 raw_response 발견, 길이:', bookData.raw_response.length);
-
-        // 🔍 전체 raw_response 내용을 500글자씩 나누어서 출력
-        console.log('📋 raw_response 전체 내용 (500글자씩 분할):');
-        console.log('='.repeat(80));
-        const chunkSize = 500;
-        for (let i = 0; i < bookData.raw_response.length; i += chunkSize) {
-            const chunk = bookData.raw_response.substring(i, i + chunkSize);
-            console.log(`청크 ${Math.floor(i / chunkSize) + 1}/${Math.ceil(bookData.raw_response.length / chunkSize)}:`, chunk);
-        }
-        console.log('='.repeat(80));
-        console.log('raw_response 끝부분:', bookData.raw_response.substring(bookData.raw_response.length - 200));
+        console.log('raw_response 시작 부분:', bookData.raw_response.substring(0, 200));
 
         try {
             // 먼저 원본 그대로 JSON 파싱 시도 (완전한 JSON 구조인 경우)
@@ -233,21 +293,12 @@ export const parseBookData = (bookData) => {
                     return parsed.pages;
                 }
             } catch (originalError) {
-                console.log('⚠️ 원본 JSON 파싱 실패:', originalError.message);
-                console.log('🔄 정리 후 재시도...');
+                console.log('⚠️ 원본 JSON 파싱 실패, 정리 후 재시도');
 
                 // JSON 문자열 정리 후 파싱 시도
                 const cleanResponse = cleanJsonString(bookData.raw_response);
                 console.log('🧹 정리된 응답 길이:', cleanResponse.length);
-
-                // 정리된 내용도 500글자씩 분할해서 출력
-                console.log('🧹 정리된 응답 전체 내용 (500글자씩 분할):');
-                console.log('-'.repeat(80));
-                for (let i = 0; i < cleanResponse.length; i += chunkSize) {
-                    const chunk = cleanResponse.substring(i, i + chunkSize);
-                    console.log(`정리된 청크 ${Math.floor(i / chunkSize) + 1}/${Math.ceil(cleanResponse.length / chunkSize)}:`, chunk);
-                }
-                console.log('-'.repeat(80));
+                console.log('정리된 응답 시작 부분:', cleanResponse.substring(0, 200));
 
                 parsed = JSON.parse(cleanResponse);
                 console.log('✅ 정리 후 JSON 파싱 성공');
@@ -265,54 +316,14 @@ export const parseBookData = (bookData) => {
             }
 
         } catch (e) {
-            console.error('❌ JSON 파싱 완전 실패:', e.message);
-            console.log('🔄 텍스트 추출 시도...');
+            console.error('❌ JSON 파싱 완전 실패:', e);
+            console.log('파싱 실패한 원본 raw_response:', bookData.raw_response.substring(0, 500));
 
             // 파싱 실패 시 텍스트에서 페이지 정보 추출 시도
             try {
+                console.log('🔄 텍스트 추출 시도...');
                 const extractedPages = extractPagesFromText(bookData.raw_response);
                 console.log('📖 텍스트 추출 결과:', extractedPages);
-
-                if (extractedPages.length === 0) {
-                    console.log('⚠️ 텍스트 추출에서도 페이지를 찾지 못함');
-                    console.log('🔍 패턴 매치 실패 원인 분석을 위해 원본 데이터 확인:');
-                    console.log('데이터 타입:', typeof bookData.raw_response);
-                    console.log('데이터에 "page" 포함 여부:', bookData.raw_response.includes('"page"'));
-                    console.log('데이터에 "content" 포함 여부:', bookData.raw_response.includes('"content"'));
-                } else if (extractedPages.length < 6) {
-                    console.log(`⚠️ ${extractedPages.length}개 페이지만 찾음, 6페이지 추가 검색...`);
-
-                    // 6페이지를 더 적극적으로 찾기
-                    const page6Patterns = [
-                        /"page"\s*:\s*6\s*,\s*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/g,
-                        /"page":\s*6,\s*"content":\s*"([^"]*(?:\\.[^"]*)*)"/g,
-                        /\{\s*"page"\s*:\s*6[^}]*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/g
-                    ];
-
-                    let found6thPage = false;
-                    for (const pattern of page6Patterns) {
-                        const match = bookData.raw_response.match(pattern);
-                        if (match) {
-                            console.log('✅ 6페이지 추가 패턴으로 발견!', match[0].substring(0, 100));
-                            found6thPage = true;
-                            break;
-                        }
-                    }
-
-                    if (!found6thPage) {
-                        // raw_response 끝부분에서 6페이지 찾기
-                        const lastPart = bookData.raw_response.substring(bookData.raw_response.length - 500);
-                        console.log('🔍 raw_response 마지막 500글자에서 6페이지 검색:');
-                        console.log(lastPart);
-
-                        if (lastPart.includes('"page": 6') || lastPart.includes('"page":6')) {
-                            console.log('✅ 마지막 부분에서 6페이지 발견!');
-                        } else {
-                            console.log('❌ 6페이지를 전혀 찾을 수 없음');
-                        }
-                    }
-                }
-
                 return extractedPages;
             } catch (extractError) {
                 console.error('❌ 페이지 추출도 실패:', extractError);

@@ -1,4 +1,4 @@
-# python/models/text_model.py - 수정된 버전
+# python/models/text_model.py - Ollama 전용 (완전한 코드)
 import os
 import sys
 
@@ -37,6 +37,7 @@ class TextModel:
             if not any(self.model_name in name for name in model_names):
                 print(f"모델 {self.model_name}을 찾을 수 없습니다", file=sys.stderr)
                 print(f"다운로드: ollama pull {self.model_name}", file=sys.stderr)
+                # 자동 다운로드 시도하지 않음 (시간이 오래 걸리므로)
             
             print(f"Ollama 연결 성공: {self.model_name}", file=sys.stderr)
             self.available = True
@@ -50,7 +51,7 @@ class TextModel:
             self.available = False
     
     def generate(self, prompt, max_tokens=2000, temperature=0.7):
-        """텍스트 생성 - 원본 응답 그대로 반환"""
+        """텍스트 생성 - 응답 정리"""
         if not self.available or not self.client:
             return "모델을 사용할 수 없습니다. Ollama 서버가 실행 중인지 확인하세요."
         
@@ -78,8 +79,8 @@ class TextModel:
             
             print(f"원본 응답 길이: {len(raw_result)} 문자", file=sys.stderr)
             
-            # 시스템 메시지만 제거하고 나머지는 그대로 반환
-            cleaned_result = self._remove_system_messages_only(raw_result)
+            # 응답 정리 - 시스템 메시지 제거하고 JSON만 추출
+            cleaned_result = self._clean_response(raw_result)
             
             print(f"정리된 응답 길이: {len(cleaned_result)} 문자", file=sys.stderr)
             
@@ -90,49 +91,71 @@ class TextModel:
             print(error_msg, file=sys.stderr)
             return error_msg
     
-    def _remove_system_messages_only(self, raw_response):
-        """시스템 메시지만 제거하고 JSON은 그대로 유지"""
+    def _clean_response(self, raw_response):
+        """응답에서 시스템 메시지 제거하고 JSON만 추출"""
         try:
-            print("시스템 메시지 제거 시작", file=sys.stderr)
+            print("응답 정리 시작", file=sys.stderr)
             
-            # 시스템 로그 패턴들
-            system_patterns = [
-                "사용 가능한 모델:",
-                "Ollama 연결 성공:",
-                "TextModel 초기화",
-                "AI 생성 시작",
-                "원본 응답 길이:",
-                "정리된 응답 길이:"
-            ]
+            # JSON 배열이나 객체 시작점 찾기
+            json_start = -1
             
-            lines = raw_response.split('\n')
-            cleaned_lines = []
+            # 1. 대괄호부터 찾기 (JSON 배열)
+            bracket_pos = raw_response.find('[')
             
-            for line in lines:
-                # 시스템 메시지가 포함된 라인 스킵
-                if any(pattern in line for pattern in system_patterns):
-                    continue
-                cleaned_lines.append(line)
+            # 2. 중괄호 찾기 (JSON 객체)
+            brace_pos = raw_response.find('{')
             
-            # JSON 시작점 찾기 (하지만 끝점은 찾지 않음 - 전체 유지)
-            result = '\n'.join(cleaned_lines)
+            # 대괄호가 있고, 중괄호보다 먼저 나오면 대괄호 사용
+            if bracket_pos != -1 and (brace_pos == -1 or bracket_pos < brace_pos):
+                json_start = bracket_pos
+                print(f"JSON 배열 시작점 발견: {json_start}", file=sys.stderr)
+            elif brace_pos != -1:
+                json_start = brace_pos
+                print(f"JSON 객체 시작점 발견: {json_start}", file=sys.stderr)
             
-            # JSON 시작점만 찾기
-            json_start_pos = -1
-            for start_char in ['{', '[']:
-                pos = result.find(start_char)
-                if pos != -1:
-                    if json_start_pos == -1 or pos < json_start_pos:
-                        json_start_pos = pos
-            
-            if json_start_pos != -1:
-                # 시작점부터 끝까지 모든 내용 포함
-                final_result = result[json_start_pos:].strip()
-                print(f"JSON 시작점에서 끝까지 추출: {len(final_result)} 문자", file=sys.stderr)
-                return final_result
+            if json_start != -1:
+                # JSON 부분만 추출
+                json_part = raw_response[json_start:].strip()
+                
+                # JSON 종료점도 찾아서 더 정확하게 추출
+                if json_part.startswith('['):
+                    # 배열 종료점 찾기
+                    bracket_count = 0
+                    end_pos = -1
+                    for i, char in enumerate(json_part):
+                        if char == '[':
+                            bracket_count += 1
+                        elif char == ']':
+                            bracket_count -= 1
+                            if bracket_count == 0:
+                                end_pos = i + 1
+                                break
+                    
+                    if end_pos != -1:
+                        json_part = json_part[:end_pos]
+                        
+                elif json_part.startswith('{'):
+                    # 객체 종료점 찾기
+                    brace_count = 0
+                    end_pos = -1
+                    for i, char in enumerate(json_part):
+                        if char == '{':
+                            brace_count += 1
+                        elif char == '}':
+                            brace_count -= 1
+                            if brace_count == 0:
+                                end_pos = i + 1
+                                break
+                    
+                    if end_pos != -1:
+                        json_part = json_part[:end_pos]
+                
+                print(f"최종 JSON 추출: {json_part[:100]}...", file=sys.stderr)
+                return json_part
             else:
-                print("JSON 시작점을 찾을 수 없어 전체 응답 반환", file=sys.stderr)
-                return result.strip()
+                # JSON을 찾을 수 없으면 원본 반환
+                print("JSON을 찾을 수 없어 원본 반환", file=sys.stderr)
+                return raw_response.strip()
                 
         except Exception as e:
             print(f"응답 정리 중 오류: {e}", file=sys.stderr)

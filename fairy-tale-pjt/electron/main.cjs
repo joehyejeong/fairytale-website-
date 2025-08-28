@@ -502,22 +502,22 @@ ipcMain.handle('test-ai-connection', async (event) => {
                 console.log(`Python 프로세스 종료 코드: ${code}`);
                 console.log(`Python 출력: ${stdout}`);
 
-                // 단순하게 종료 코드로만 판단
-                if (code === 0) {
-                    console.log('✅ Python 테스트 성공 - 모든 모델 연결됨');
-                    resolve({
-                        ollama: { connected: true, message: "Ollama 서버 연결됨" },
-                        text: { connected: true, message: "텍스트 모델 연결됨" },
-                        image: { connected: false, message: "이미지 모델 연결 안 됨" }
-                    });
-                } else {
-                    console.log('❌ Python 테스트 실패 - 일부 모델 연결 안 됨');
-                    resolve({
-                        ollama: { connected: false, message: "Ollama 서버 연결 안 됨" },
-                        text: { connected: false, message: "텍스트 모델 연결 안 됨" },
-                        image: { connected: false, message: "이미지 모델 연결 안 됨" }
-                    });
-                }
+                // Python 출력을 파싱하여 각 모델의 상태 확인
+                const ollamaConnected = stdout.includes('Ollama 서버 연결됨');
+                const textConnected = stdout.includes('텍스트 모델 연결됨');
+                const imageConnected = stdout.includes('이미지 모델 연결됨');
+
+                console.log('📊 파싱된 연결 상태:', {
+                    ollama: ollamaConnected,
+                    text: textConnected,
+                    image: imageConnected
+                });
+
+                resolve({
+                    ollama: { connected: ollamaConnected, message: ollamaConnected ? "Ollama 서버 연결됨" : "Ollama 서버 연결 안 됨" },
+                    text: { connected: textConnected, message: textConnected ? "텍스트 모델 연결됨" : "텍스트 모델 연결 안 됨" },
+                    image: { connected: imageConnected, message: imageConnected ? "이미지 모델 연결됨" : "이미지 모델 연결 안 됨" }
+                });
             });
         });
     } catch (error) {

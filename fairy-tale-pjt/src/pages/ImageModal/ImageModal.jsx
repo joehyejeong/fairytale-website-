@@ -44,27 +44,17 @@ const ImageModal = ({ isOpen, onClose, currentPageIndex }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex justify-center items-center"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+            className="fixed inset-0 z-50 flex justify-center items-center bg-black/70"
             onClick={handleClose}
         >
             <div
-                className="bg-white rounded-[8px] relative"
-                style={{
-                    width: '777px',
-                    height: '555px',
-                    border: '2px solid var(--jk-yellow)'
-                }}
+                className="bg-white rounded-[8px] relative w-[777px] h-[555px] border-2 border-[var(--jk-yellow)]"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Cancel 아이콘 */}
                 <button
                     onClick={handleClose}
-                    className="absolute w-9 h-9 flex justify-center items-center hover:bg-gray-100 rounded-full transition-colors"
-                    style={{
-                        top: '38px',
-                        right: '38px'
-                    }}
+                    className="absolute w-9 h-9 flex justify-center items-center hover:bg-gray-100 rounded-full transition-colors top-[38px] right-[38px]"
                 >
                     <X size={30} className="text-black" />
                 </button>

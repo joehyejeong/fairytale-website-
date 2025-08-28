@@ -82,11 +82,7 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
                 <img
                     src={`file://${generatedImagePath}`}
                     alt="Generated"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                    }}
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                         console.error('이미지 로드 실패:', generatedImagePath);
                         // 에러 시 기본 아이콘 표시
@@ -111,10 +107,7 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
             <img
                 src={sunIcon}
                 alt="Sun"
-                style={{
-                    width: '84px',
-                    height: '84px'
-                }}
+                className="w-[84px] h-[84px]"
             />
         );
     };
@@ -144,25 +137,10 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
 
                 {/* 중앙 텍스트 - 올바른 위치 */}
                 <div className="flex flex-col justify-center items-center flex-grow">
-                    <div
-                        style={{
-                            fontFamily: 'Noto Sans KR',
-                            fontWeight: 500,
-                            fontSize: '23px',
-                            color: 'black'
-                        }}
-                    >
+                    <div className="font-medium text-[23px] text-black font-['Noto_Sans_KR']">
                         AI 이미지 생성하기
                     </div>
-                    <div
-                        style={{
-                            fontFamily: 'Noto Sans KR',
-                            fontWeight: 500,
-                            fontSize: '15px',
-                            color: '#929292',
-                            marginTop: '8px'
-                        }}
-                    >
+                    <div className="font-medium text-[15px] text-[#929292] mt-2 font-['Noto_Sans_KR']">
                         {generationResult && generationResult.success
                             ? '이미지를 사용하시려면 적용하기 버튼을 눌러주세요.'
                             : '이미지 생성에 실패했습니다. 다시 시도해주세요.'
@@ -171,19 +149,13 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
                 </div>
 
                 {/* 오른쪽 빈 공간 - 레이아웃 균형 */}
-                <div className="flex-shrink-0" style={{ width: '44px' }}></div>
+                <div className="flex-shrink-0 w-[44px]"></div>
             </div>
 
             {/* (2) 하단 메인 콘텐츠 */}
-            <div className="flex flex-row justify-center mt-[20px]">
+            <div className="flex flex-row justify-center mt-5">
                 {/* 왼쪽 이미지 영역 */}
-                <div
-                    style={{
-                        width: '468px',
-                        height: '402px'
-                    }}
-                    className="bg-custom-jk_lightest_yellow flex justify-center items-center relative overflow-hidden"
-                >
+                <div className="w-[468px] h-[402px] bg-custom-jk_lightest_yellow flex justify-center items-center relative overflow-hidden">
                     {renderGeneratedImage()}
 
                     {/* 생성 실패했을 때 오버레이 */}
@@ -198,59 +170,36 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
                 </div>
 
                 {/* 오른쪽 스타일 선택 영역 */}
-                <div
-                    style={{
-                        marginLeft: '27px'
-                    }}
-                    className="flex flex-col"
-                >
+                <div className="ml-[27px] flex flex-col">
                     {/* (3-1) 스타일 옵션들 */}
-                    <div
-                        style={{
-                            width: '203px',
-                            height: '345px'
-                        }}
-                        className="bg-custom-jk_lightest_yellow flex flex-col justify-evenly"
-                    >
+                    <div className="w-[203px] h-[345px] bg-custom-jk_lightest_yellow flex flex-col justify-evenly">
                         {styleOptions.map((style, index) => (
                             <div
                                 key={style.id}
-                                className="flex flex-row items-center cursor-pointer transition-colors"
+                                className="flex flex-row items-center cursor-pointer transition-colors w-[200px] h-[68px] p-3 rounded"
                                 style={{
-                                    width: '200px',
-                                    height: '68px',
-                                    padding: '12px',
                                     backgroundColor: selectedStyle === style.id ? 'var(--jk-yellow)' : 'transparent',
-                                    borderRadius: '4px',
                                     opacity: isApplying ? 0.6 : 1,
                                     pointerEvents: isApplying ? 'none' : 'auto'
                                 }}
                                 onClick={() => !isApplying && handleStyleSelect(style.id)}
                             >
                                 {/* 번호 */}
-                                <span
+                                <span className="font-light text-[15px] font-['Noto_Sans_KR']"
                                     style={{
-                                        fontFamily: 'Noto Sans KR',
-                                        fontWeight: 300,
-                                        fontSize: '15px',
                                         color: selectedStyle === style.id ? 'white' : 'black'
-                                    }}
-                                >
+                                    }}>
                                     {String(index + 1).padStart(2, '0')}
                                 </span>
 
                                 {/* 마진 */}
-                                <div style={{ marginLeft: '9px' }} />
+                                <div className="ml-[9px]" />
 
                                 {/* 이미지 */}
                                 <img
                                     src={style.image}
                                     alt={style.name}
-                                    style={{
-                                        width: '38px',
-                                        height: '51px',
-                                        objectFit: 'cover'
-                                    }}
+                                    className="w-[38px] h-[51px] object-cover"
                                     onError={(e) => {
                                         // 이미지 로드 실패 시 기본 이미지 표시
                                         e.target.style.display = 'none';
@@ -271,17 +220,13 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
                                 />
 
                                 {/* 마진 */}
-                                <div style={{ marginLeft: '9px' }} />
+                                <div className="ml-[9px]" />
 
                                 {/* 텍스트 */}
-                                <span
+                                <span className="font-light text-[15px] font-['Noto_Sans_KR']"
                                     style={{
-                                        fontFamily: 'Noto Sans KR',
-                                        fontWeight: 300,
-                                        fontSize: '15px',
                                         color: selectedStyle === style.id ? 'white' : 'black'
-                                    }}
-                                >
+                                    }}>
                                     {style.name}
                                 </span>
                             </div>
@@ -289,38 +234,11 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
                     </div>
 
                     {/* (3-2) 적용하기 버튼 */}
-                    <div style={{ marginTop: '9px' }}>
+                    <div className="mt-[9px]">
                         <button
                             onClick={handleApply}
                             disabled={isApplying || !generationResult || !generationResult.success}
-                            style={{
-                                width: '203px',
-                                height: '42px',
-                                backgroundColor: isApplying || !generationResult || !generationResult.success
-                                    ? '#ccc'
-                                    : 'var(--jk-blue)',
-                                borderRadius: '8px',
-                                border: 'none',
-                                color: 'white',
-                                fontFamily: 'Noto Sans KR',
-                                fontWeight: 500,
-                                fontSize: '21px',
-                                cursor: isApplying || !generationResult || !generationResult.success
-                                    ? 'not-allowed'
-                                    : 'pointer',
-                                transition: 'opacity 0.2s',
-                                opacity: isApplying || !generationResult || !generationResult.success ? 0.6 : 1
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!isApplying && generationResult && generationResult.success) {
-                                    e.target.style.opacity = '0.8';
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!isApplying && generationResult && generationResult.success) {
-                                    e.target.style.opacity = '1';
-                                }
-                            }}
+                            className="w-[203px] h-[42px] bg-[var(--jk-blue)] disabled:bg-[#ccc] rounded-[8px] border-none text-white font-medium text-[21px] font-['Noto_Sans_KR'] disabled:cursor-not-allowed cursor-pointer transition-opacity duration-200 disabled:opacity-60 opacity-100 hover:opacity-80 disabled:hover:opacity-60"
                         >
                             {isApplying ? '적용 중...' : '적용하기'}
                         </button>

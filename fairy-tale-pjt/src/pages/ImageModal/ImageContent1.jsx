@@ -130,84 +130,38 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
     return (
         <div className="flex flex-col justify-center items-center">
             {/* (1) AI 이미지 생성하기 제목 */}
-            <div
-                style={{
-                    fontFamily: 'Noto Sans KR',
-                    fontWeight: 500,
-                    fontSize: '23px',
-                    color: 'black',
-                    textAlign: 'center'
-                }}
-            >
+            <div className="font-medium text-[23px] text-black text-center font-['Noto_Sans_KR']">
                 AI 이미지 생성하기
             </div>
 
             {/* (2) 설명 텍스트 */}
-            <div
-                style={{
-                    fontFamily: 'Noto Sans KR',
-                    fontWeight: 500,
-                    fontSize: '15px',
-                    color: '#929292',
-                    textAlign: 'center',
-                    marginTop: '8px'
-                }}
-            >
+            <div className="font-medium text-[15px] text-[#929292] text-center mt-2 font-['Noto_Sans_KR']">
                 원하는 장면을 적어주세요. AI가 그림을 생성합니다.
             </div>
 
             {/* (3) 드롭다운 */}
-            <div
-                style={{
-                    width: '554px',
-                    height: '45px',
-                    marginTop: '17px'
-                }}
-                className="bg-custom-jk_light_yellow rounded-[8px] flex justify-center items-center relative cursor-pointer"
-                onClick={toggleDropdown}
-            >
-                <span
-                    style={{
-                        fontFamily: 'Noto Sans KR',
-                        fontWeight: 500,
-                        fontSize: '18px',
-                        color: 'black'
-                    }}
-                >
+            <div className="w-[554px] h-[45px] mt-[17px] bg-custom-jk_light_yellow rounded-[8px] flex justify-center items-center relative cursor-pointer" onClick={toggleDropdown}>
+                <span className="font-medium text-[18px] text-black font-['Noto_Sans_KR']">
                     {dropdownText}
                 </span>
 
                 {/* 드롭다운 화살표 */}
-                <div style={{ marginLeft: '12px' }}>
-                    <span className="material-symbols-outlined text-black" style={{ fontSize: '24px' }}>
+                <div className="ml-3">
+                    <span className="material-symbols-outlined text-black text-[24px]">
                         {isDropdownOpen ? 'expand_less' : 'expand_more'}
                     </span>
                 </div>
 
                 {/* 드롭다운 옵션들 */}
                 {isDropdownOpen && (
-                    <div
-                        className="absolute top-full left-0 w-full bg-custom-jk_light_yellow border border-custom-jk_dark_yellow rounded-[8px] z-10"
-                        style={{
-                            maxHeight: '225px',
-                            overflowY: 'auto',
-                            marginTop: '2px'
-                        }}
-                    >
+                    <div className="absolute top-full left-0 w-full bg-custom-jk_light_yellow border border-custom-jk_dark_yellow rounded-[8px] z-10 max-h-[225px] overflow-y-auto mt-0.5">
                         {dropdownOptions.map((option, index) => (
                             <div
                                 key={index}
-                                className="px-5 py-3 hover:bg-custom-jk_dark_yellow cursor-pointer transition-colors"
+                                className="px-5 py-3 hover:bg-custom-jk_dark_yellow cursor-pointer transition-colors font-medium text-[18px] text-black whitespace-nowrap font-['Noto_Sans_KR']"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleDropdownChange(option);
-                                }}
-                                style={{
-                                    fontFamily: 'Noto Sans KR',
-                                    fontWeight: 500,
-                                    fontSize: '18px',
-                                    color: 'black',
-                                    whiteSpace: 'nowrap'
                                 }}
                             >
                                 {option}
@@ -218,37 +172,20 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
             </div>
 
             {/* (4) 텍스트 입력 영역 */}
-            <div
-                style={{
-                    width: '554px',
-                    height: '152px',
-                    marginTop: '17px',
-                    padding: '14px 78px 14px 24px'
-                }}
-                className="bg-custom-jk_lightest_yellow rounded-[8px] relative"
-            >
+            <div className="w-[554px] h-[152px] mt-[17px] px-6 py-[14px] pr-[78px] pl-6 bg-custom-jk_lightest_yellow rounded-[8px] relative">
                 <textarea
                     placeholder="생성하고 싶은 이미지를 설명해주세요."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     disabled={isGenerating}
-                    className="w-full h-full bg-transparent border-none outline-none resize-none"
+                    className="w-full h-full bg-transparent border-none outline-none resize-none font-normal text-[21px] font-['Noto_Sans_KR']"
                     style={{
-                        fontFamily: 'Noto Sans KR',
-                        fontWeight: 400,
-                        fontSize: '21px',
                         color: isGenerating ? '#999' : '#666'
                     }}
                 />
 
                 {/* Book2 아이콘 (Material Icons) */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '14px',
-                        right: '24px'
-                    }}
-                >
+                <div className="absolute top-[14px] right-6">
                     <Tooltip
                         content="현재 페이지의 이야기를 확인할 수 있습니다."
                         show={showTooltip}
@@ -258,7 +195,7 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
                             onMouseLeave={handleBookIconLeave}
                         >
                             <SmallIconButton
-                                icon={<span className="material-symbols-outlined text-custom-jk_yellow" style={{ fontSize: '29px', width: '29px', height: '29px' }}>book_2</span>}
+                                icon={<span className="material-symbols-outlined text-custom-jk_yellow text-[29px] w-[29px] h-[29px]">book_2</span>}
                                 onClick={handleBookIconClick}
                                 disabled={isGenerating}
                             />
@@ -268,56 +205,19 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
             </div>
 
             {/* (5) 예시 문장들 */}
-            <div
-                style={{
-                    marginTop: '9px',
-                    textAlign: 'left',
-                    width: '554px'
-                }}
-            >
-                <div
-                    style={{
-                        fontFamily: 'Noto Sans KR',
-                        fontWeight: 500,
-                        fontSize: '12px',
-                        color: '#929292',
-                        lineHeight: '1.2'
-                    }}
-                >
+            <div className="mt-[9px] text-left w-[554px]">
+                <div className="font-medium text-xs text-[#929292] leading-tight font-['Noto_Sans_KR']">
                     예시1) 따뜻한 조명의 카페에서 책을 읽는 청년<br />
                     예시2) 마법사가 빛나는 지팡이로 주문을 외우고 있다
                 </div>
             </div>
 
             {/* (6) 생성 버튼 */}
-            <div style={{ marginTop: '32px' }}>
+            <div className="mt-8">
                 <button
                     onClick={handleGenerate}
                     disabled={isGenerating || !description.trim()}
-                    style={{
-                        width: '147px',
-                        height: '42px',
-                        backgroundColor: isGenerating ? '#ccc' : 'var(--jk-blue)',
-                        borderRadius: '8px',
-                        border: 'none',
-                        color: 'white',
-                        fontFamily: 'Noto Sans KR',
-                        fontWeight: 500,
-                        fontSize: '21px',
-                        cursor: isGenerating || !description.trim() ? 'not-allowed' : 'pointer',
-                        transition: 'opacity 0.2s',
-                        opacity: isGenerating || !description.trim() ? 0.6 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                        if (!isGenerating && description.trim()) {
-                            e.target.style.opacity = '0.8';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (!isGenerating && description.trim()) {
-                            e.target.style.opacity = '1';
-                        }
-                    }}
+                    className="w-[147px] h-[42px] bg-[var(--jk-blue)] disabled:bg-[#ccc] rounded-[8px] border-none text-white font-medium text-[21px] font-['Noto_Sans_KR'] disabled:cursor-not-allowed cursor-pointer transition-opacity duration-200 disabled:opacity-60 opacity-100 hover:opacity-80 disabled:hover:opacity-60"
                 >
                     {isGenerating ? '생성 중...' : '생성'}
                 </button>

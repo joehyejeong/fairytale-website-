@@ -5,14 +5,14 @@ import Tooltip from '../../components/Tooltip';
 import sunIcon from '../../assets/sun.svg';
 import useStoryStore from '@/stores/storyStore';
 
-const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, generationResult, onApply }) => {
+const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, generationResult, currentPageIndex, onApply }) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const [selectedStyle, setSelectedStyle] = useState(initialSelectedStyle);
     const [isApplying, setIsApplying] = useState(false);
     const [generatedImagePath, setGeneratedImagePath] = useState('');
 
     // 스토어에서 함수들 가져오기
-    const { getCurrentPageIndex, setAppliedImage } = useStoryStore();
+    const { setAppliedImage } = useStoryStore();
 
     const styleOptions = [
         { id: 0, name: '수채화 일러스트', image: '/01.webp' },
@@ -44,19 +44,19 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
 
         try {
             console.log('이미지 적용 요청:', {
-                pageNumber: generationResult.page_number || getCurrentPageIndex() || 1
+                pageNumber: currentPageIndex
             });
 
-            // Electron API를 통해 이미지 적용 요청 (temps -> saves)
+            // Electron API를 통해 이미지 적용 요청 
             const result = await window.electronAPI.applyImage({
-                pageNumber: generationResult.page_number || getCurrentPageIndex() || 1
+                pageNumber: currentPageIndex
             });
 
             console.log('이미지 적용 결과:', result);
 
             if (result.success) {
                 // 스토어에 적용된 이미지 경로 저장
-                setAppliedImage(result.pageNumber, result.imagePath);
+                setAppliedImage(currentPageIndex, result.imagePath);
 
                 alert('이미지가 성공적으로 적용되었습니다!');
 

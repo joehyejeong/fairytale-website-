@@ -70,6 +70,7 @@ const ImageModal = ({ isOpen, onClose, currentPageIndex }) => {
                         <ImageContent2
                             onBack={handleBack}
                             selectedStyle={selectedStyle}
+                            currentPageIndex={currentPageIndex}
                             generationResult={generationResult}
                             onApply={handleApply}
                         />

@@ -4,7 +4,7 @@ import { getCurrentDateKorean } from '@/lib/dateUtils';
 import useStoryStore from '@/stores/storyStore';
 
 const LeftPage = ({
-    isCover = false,
+    isType = content,
     isLastPage = false,
     onImageClick,
     title = "",
@@ -46,7 +46,7 @@ const LeftPage = ({
                     alt="Applied"
                     className="w-full h-full object-cover object-center"
                     style={{
-                        borderRadius: isCover ? '8px' : '0px'
+                        borderRadius: isType == 'cover' ? '8px' : '0px'
                     }}
                     onError={(e) => {
                         // 이미지 로드 실패 시 기본 아이콘으로 대체
@@ -58,8 +58,8 @@ const LeftPage = ({
                             fallback.src = sunIcon;
                             fallback.alt = 'Sun';
                             fallback.className = 'fallback-icon';
-                            fallback.style.width = isCover ? '67px' : '67px';
-                            fallback.style.height = isCover ? '67px' : '67px';
+                            fallback.style.width = isType == 'cover' ? '67px' : '67px';
+                            fallback.style.height = isType == 'cover' ? '67px' : '67px';
                             parent.appendChild(fallback);
                         }
                     }}
@@ -71,13 +71,13 @@ const LeftPage = ({
                 <img
                     src={sunIcon}
                     alt="Sun"
-                    className={`${isCover ? 'w-[67px] h-[67px]' : 'w-[67px] h-[67px]'}`}
+                    className={`${isType == 'cover' ? 'w-[67px] h-[67px]' : 'w-[67px] h-[67px]'}`}
                 />
             );
         }
     };
 
-    if (isLastPage) {
+    if (isType == 'last') { //맞나?
         return (
             <div className="w-[499px] h-[512px] p-[12px] bg-white drop-shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] relative">
                 <div className="flex flex-col items-start pt-[140px]">
@@ -88,14 +88,7 @@ const LeftPage = ({
                     >
                         {renderImage()}
 
-                        {/* 이미지가 있을 때 호버 오버레이 */}
-                        {(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && (
-                            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex justify-center items-center">
-                                <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 text-white text-xs bg-black bg-opacity-70 px-2 py-1 rounded">
-                                    이미지 변경
-                                </div>
-                            </div>
-                        )}
+
                     </div>
 
                     {/* (2) 제목 텍스트 */}
@@ -141,8 +134,8 @@ const LeftPage = ({
     }
 
     return (
-        <div className={`w-[499px] h-[512px] ${isCover ? 'bg-white' : 'bg-custom-jk_light_yellow'} drop-shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] flex justify-center items-center relative`}>
-            {isCover ? (
+        <div className={`w-[499px] h-[512px] ${isType == 'cover' ? 'bg-white' : 'bg-custom-jk_light_yellow'} drop-shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] flex justify-center items-center relative`}>
+            {isType == 'cover' ? (
                 /* 표지인 경우 - jk_light_yellow 배경 부분만 클릭 가능 */
                 <div
                     className="w-[160px] h-[160px] bg-custom-jk_light_yellow rounded-lg flex justify-center items-center cursor-pointer transition-transform hover:scale-105 relative overflow-hidden"
@@ -150,39 +143,23 @@ const LeftPage = ({
                 >
                     {renderImage()}
 
-                    {/* 이미지가 있을 때 호버 오버레이 */}
-                    {(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && (
-                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex justify-center items-center">
-                            <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 text-white text-xs bg-black bg-opacity-70 px-2 py-1 rounded">
-                                이미지 변경
-                            </div>
-                        </div>
-                    )}
+
                 </div>
             ) : (
                 /* 일반 페이지인 경우 - 전체 배경이 클릭 가능 */
                 <div
                     className="w-full h-full flex justify-center items-center cursor-pointer transition-transform hover:scale-[1.02] relative overflow-hidden"
                     onClick={onImageClick}
-                    style={{
-                        backgroundImage: (appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) ?
-                            `url(${appliedImage || `file://${getAppliedImage(pageNumber)}`})` : 'none',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat'
-                    }}
+                // style={{
+                //     backgroundImage: (appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) ?
+                //         `url(${appliedImage || `file://${getAppliedImage(pageNumber)}`})` : 'none',
+                //     backgroundSize: 'cover',
+                //     backgroundPosition: 'center',
+                //     backgroundRepeat: 'no-repeat'
+                // }}
                 >
-                    {/* 이미지가 없을 때만 아이콘 표시 */}
-                    {!(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && renderImage()}
+                    {renderImage()}
 
-                    {/* 이미지가 있을 때 오버레이 효과를 위한 투명 배경 */}
-                    {(appliedImage || (pageNumber && getAppliedImage(pageNumber) && getAppliedImage(pageNumber) !== 'null')) && (
-                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex justify-center items-center">
-                            <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 text-white bg-black bg-opacity-50 px-3 py-1 rounded text-sm">
-                                이미지 변경
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
         </div>

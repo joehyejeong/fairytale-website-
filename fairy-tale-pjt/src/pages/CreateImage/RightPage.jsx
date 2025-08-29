@@ -4,7 +4,7 @@ import IconButton from '@/components/IconButton';
 import useStoryStore from '@/stores/storyStore';
 
 const RightPage = ({
-    isCover = false,
+    isType = content,
     isLastPage = false,
     onImageClick,
     title = "",
@@ -15,31 +15,16 @@ const RightPage = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editedContent, setEditedContent] = useState('');
 
-    // 스토어에서 함수들 가져오기
-    const { getPageContent, getAppliedImage, getCurrentPageIndex } = useStoryStore();
+    // 스토어에서 함수들 가져오기: 텍스트 가져오기
+    const { getPageContent, getAppliedImage } = useStoryStore();
 
-    // 현재 페이지의 내용 가져오기
-    React.useEffect(() => {
-        if (pageNumber && !isCover && !isLastPage) {
-            // CreateImage의 페이지 인덱스를 실제 내용 페이지로 변환
-            const currentPageIdx = getCurrentPageIndex();
-            let contentPageNumber = 1;
-
-            if (currentPageIdx === 0) {
-                // 표지 페이지
-                contentPageNumber = 1;
-            } else if (currentPageIdx <= 6) {
-                // 1-2페이지(index 1) -> page1, 3-4페이지(index 2) -> page2, ...
-                contentPageNumber = currentPageIdx;
-            } else {
-                // 13페이지는 마지막 페이지
-                contentPageNumber = 6;
-            }
-
-            const content = getPageContent(contentPageNumber);
+    React.useEffect(() => { //getPageContent에 pageNumber(0~13중)
+        if (pageNumber && (isType == 'content')) { // 이렇게 쓰는게 맞나?
+            // Page
+            const content = getPageContent(pageNumber);
             setEditedContent(content || '');
         }
-    }, [pageNumber, isCover, isLastPage, getPageContent, getCurrentPageIndex]);
+    }, [pageNumber, getPageContent]);
 
     const handleEditClick = () => {
         setIsEditing(true);
@@ -53,7 +38,7 @@ const RightPage = ({
 
     const renderImage = () => {
         // props로 전달된 appliedImage 또는 스토어에서 가져온 이미지 사용
-        const imageUrl = appliedImage || (pageNumber ? `file://${getAppliedImage(pageNumber)}` : null);
+        const imageUrl = appliedImage || (pageNumber >= 0 ? `file://${getAppliedImage(pageNumber)}` : null);
 
         if (imageUrl && imageUrl !== 'file://null') {
             return (
@@ -92,31 +77,24 @@ const RightPage = ({
 
     return (
         <div className="w-[499px] h-[512px] bg-white drop-shadow-[4px_4px_4px_rgba(0,0,0,0.25)] relative">
-            {isCover ? (
+            {isType == 'cover' ? (
                 /* 표지인 경우 - jk_light_yellow 배경 부분만 클릭 가능 */
                 <div className="w-full h-full">
                     {/* 상단 이미지 영역 - jk_light_yellow 배경만 클릭 가능 */}
                     <div
                         className="w-[494px] h-[388px] bg-custom-jk_light_yellow flex justify-center items-center cursor-pointer transition-transform hover:scale-105 relative overflow-hidden"
                         onClick={onImageClick}
-                        style={{
-                            backgroundImage: (appliedImage || getAppliedImage(pageNumber)) ? `url(${appliedImage || `file://${getAppliedImage(pageNumber)}`})` : 'none',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            backgroundRepeat: 'no-repeat'
-                        }}
-                    >
-                        {/* 이미지가 없을 때만 아이콘 표시 */}
-                        {!(appliedImage || getAppliedImage(pageNumber)) && renderImage()}
 
-                        {/* 이미지가 있을 때 오버레이 효과 */}
-                        {(appliedImage || getAppliedImage(pageNumber)) && (
-                            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex justify-center items-center">
-                                <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 text-white bg-black bg-opacity-50 px-3 py-1 rounded text-sm">
-                                    이미지 변경
-                                </div>
-                            </div>
-                        )}
+                    // style={{
+                    //     backgroundImage: (appliedImage || getAppliedImage(pageNumber)) ? `url(${appliedImage || `file://${getAppliedImage(pageNumber)}`})` : 'none',
+                    //     backgroundSize: 'cover',
+                    //     backgroundPosition: 'center',
+                    //     backgroundRepeat: 'no-repeat'
+                    // }}
+                    >
+                        {/* 이미지가 있을 때 이미지 넣고, 이미지가 없을 때만 아이콘 표시 */}
+                        {renderImage()}
+
                     </div>
 
                     {/* 제목 - 클릭 불가능 */}
@@ -161,7 +139,7 @@ const RightPage = ({
             )}
 
             {/* Edit/Save 아이콘 */}
-            {!isCover && !isLastPage && (
+            {isType != 'cover' && !isLastPage && (
                 <div className="absolute bottom-[30px] right-[30px]">
                     <IconButton
                         icon={

@@ -34,7 +34,7 @@ const CreateImage = () => {
         { type: 'content', title: '7-8페이지' },
         { type: 'content', title: '9-10페이지' },
         { type: 'content', title: '11-12페이지' },
-        { type: 'content', title: '13페이지' }
+        { type: 'last', title: '13페이지' }
     ];
 
     // 페이지가 변경될 때마다 스토어의 currentPageIndex 업데이트
@@ -60,19 +60,19 @@ const CreateImage = () => {
     };
 
     // 페이지 인덱스를 실제 페이지 번호로 변환
-    const getPageNumberFromIndex = (pageIndex, side) => {
-        if (pageIndex === 0) {
-            // 표지 페이지
-            return side === 'left' ? 0 : 1;
-        } else if (pageIndex === 7) {
-            // 마지막 페이지 (13페이지) - 왼쪽만 사용
-            return side === 'left' ? 13 : null;
-        } else {
-            // 일반 페이지들
-            const basePageNumber = (pageIndex - 1) * 2 + 1;
-            return side === 'left' ? basePageNumber : basePageNumber + 1;
-        }
-    };
+    // const getPageNumberFromIndex = (pageIndex, side) => {
+    //     if (pageIndex === 0) {
+    //         // 표지 페이지
+    //         return side === 'left' ? 0 : 1;
+    //     } else if (pageIndex === 7) {
+    //         // 마지막 페이지 (13페이지) - 왼쪽만 사용
+    //         return side === 'left' ? 13 : null;
+    //     } else {
+    //         // 일반 페이지들
+    //         const basePageNumber = (pageIndex - 1) * 2 + 1;
+    //         return side === 'left' ? basePageNumber : basePageNumber + 1;
+    //     }
+    // };
 
     // 페이지별 이미지 경로 가져오기
     const getImageForPage = (pageNumber) => {
@@ -95,26 +95,26 @@ const CreateImage = () => {
     };
 
     const handlePrevPage = () => {
-        if (isFlipping || currentPage === 0) return;
+        if (isFlipping || currentPage === 0) return; //첫번째 장이면 비활성화 
 
         setIsFlipping(true);
         setFlipDirection('left');
 
         setTimeout(() => {
-            setCurrentPage(prev => Math.max(0, prev - 1));
+            setCurrentPage(prev => Math.max(0, prev - 1)); //현재페이지 - 1 (첫번째 장보다 작은값 불가  )
             setIsFlipping(false);
             setFlipDirection('');
         }, 1000);
     };
 
     const handleNextPage = () => {
-        if (isFlipping || currentPage === pages.length - 1) return;
+        if (isFlipping || currentPage === pages.length - 1) return; //마지막 장이면 비활성화
 
         setIsFlipping(true);
         setFlipDirection('right');
 
         setTimeout(() => {
-            setCurrentPage(prev => Math.min(pages.length - 1, prev + 1));
+            setCurrentPage(prev => Math.min(pages.length - 1, prev + 1)); //현재페이지 + 1 (마지막 장보다 큰 값 )
             setIsFlipping(false);
             setFlipDirection('');
         }, 1000);
@@ -149,71 +149,50 @@ const CreateImage = () => {
         }
     };
 
-    const getCurrentPageIndex = () => {
-        if (clickedPageSide) {
-            return getPageNumberFromIndex(currentPage, clickedPageSide);
-        }
-        return currentPage;
-    };
+    // const getCurrentPageIndex = () => {
+    //     if (clickedPageSide) {
+    //         return getPageNumberFromIndex(currentPage, clickedPageSide);
+    //     }
+    //     return currentPage;
+    // };
 
     const renderBook = () => {
-        const currentPageData = pages[currentPage];
+        // const currentType = pages[currentPage];
 
-        if (currentPageData.type === 'cover') {
-            const leftPageNumber = getPageNumberFromIndex(currentPage, 'left');
-            const rightPageNumber = getPageNumberFromIndex(currentPage, 'right');
-
-            return (
-                <div className="book-container flex items-center gap-0 book-hover">
-                    <div className={`book-page left-page page-shadow page-depth ${isFlipping && flipDirection === 'left' ? 'flipping-left' : ''}`}>
-                        <LeftPage
-                            isCover={true}
-                            onImageClick={() => handleImageClick('left')}
-                            appliedImage={getImageForPage(leftPageNumber)}
-                            pageNumber={leftPageNumber}
-                        />
-                    </div>
-                    <div className="book-spine-shadow">
-                        <TitlePage title={title} userName={userName} />
-                    </div>
-                    <div className={`book-page right-page page-shadow page-depth ${isFlipping && flipDirection === 'right' ? 'flipping-right' : ''}`}>
-                        <RightPage
-                            isCover={true}
-                            onImageClick={() => handleImageClick('right')}
-                            title={title}
-                            userName={userName}
-                            appliedImage={getImageForPage(rightPageNumber)}
-                            pageNumber={rightPageNumber}
-                        />
-                    </div>
-                </div>
-            );
-        } else {
-            const leftPageNumber = getPageNumberFromIndex(currentPage, 'left');
-            const rightPageNumber = getPageNumberFromIndex(currentPage, 'right');
+        // if (currentPageData.type === 'cover') 
+        {
+            //     const leftPageNumber = getPageNumberFromIndex(currentPage, 'left');
+            //     const rightPageNumber = getPageNumberFromIndex(currentPage, 'right');
 
             return (
                 <div className="book-container flex items-center gap-0 book-hover">
                     <div className={`book-page left-page page-shadow page-depth ${isFlipping && flipDirection === 'left' ? 'flipping-left' : ''}`}>
                         <LeftPage
-                            isCover={false}
-                            isLastPage={currentPageData.title === '13페이지'}
+                            isType={pages[currentPage].type} // 이렇게 쓰는게 맞나? cover,content,last
+                            isLastPage={pages[currentPage].title === '13페이지'}// 이렇게 쓰는게 맞나?
                             onImageClick={() => handleImageClick('left')}
                             title={title}
                             userName={userName}
-                            appliedImage={getImageForPage(leftPageNumber)}
-                            pageNumber={leftPageNumber}
+                            appliedImage={getImageForPage(currentPage)}// 이렇게 쓰는게 맞나?
+                            pageNumber={currentPage}// 이렇게 쓰는게 맞나?
                         />
                     </div>
+                    {pages[currentPage].type === 'cover' && (
+                        <div className="book-spine-shadow">
+                            <TitlePage title={title} userName={userName} />
+                        </div>
+                    )}
+
+
                     <div className={`book-page right-page page-shadow page-depth ${isFlipping && flipDirection === 'right' ? 'flipping-right' : ''}`}>
                         <RightPage
-                            isCover={false}
-                            isLastPage={currentPageData.title === '13페이지'}
+                            isType={pages[currentPage].type}// 이렇게 쓰는게 맞나? cover,content,last
+                            isLastPage={pages[currentPage].title === '13페이지'}// 이렇게 쓰는게 맞나?
                             onImageClick={() => handleImageClick('right')}
                             title={title}
                             userName={userName}
-                            appliedImage={getImageForPage(rightPageNumber)}
-                            pageNumber={rightPageNumber}
+                            appliedImage={getImageForPage(currentPage)}// 이렇게 쓰는게 맞나?
+                            pageNumber={currentPage}// 이렇게 쓰는게 맞나?
                         />
                     </div>
                 </div>
@@ -253,13 +232,7 @@ const CreateImage = () => {
                 <span
                     className={`font-noto font-medium text-base text-[#A1A1A1] page-fade fade-in transition-all duration-300 ${isFlipping ? 'opacity-50' : 'opacity-100'}`}
                 >
-                    {pages[currentPage].title === '1-2페이지' ? '1-2 페이지' :
-                        pages[currentPage].title === '3-4페이지' ? '3-4 페이지' :
-                            pages[currentPage].title === '5-6페이지' ? '5-6 페이지' :
-                                pages[currentPage].title === '7-8페이지' ? '7-8 페이지' :
-                                    pages[currentPage].title === '9-10페이지' ? '9-10 페이지' :
-                                        pages[currentPage].title === '11-12페이지' ? '11-12 페이지' :
-                                            pages[currentPage].title}
+                    {pages[currentPage].title}
                 </span>
                 <button
                     onClick={handleNextPage}
@@ -274,11 +247,12 @@ const CreateImage = () => {
             <ImageModal
                 isOpen={isImageModalOpen}
                 onClose={handleCloseModal}
-                currentPageIndex={getCurrentPageIndex()}
+                currentPageIndex={currentPage} //맞나?
                 onImageApplied={handleImageApplied}
             />
         </div>
     );
-};
+}
+
 
 export default CreateImage;

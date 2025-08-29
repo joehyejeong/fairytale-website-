@@ -11,7 +11,7 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
     const [isGenerating, setIsGenerating] = useState(false);
 
     // 스토어에서 함수들 가져오기
-    const { getPageContent, getCurrentPageIndex } = useStoryStore();
+    const { setAppliedImage } = useStoryStore();
 
     const dropdownOptions = [
         '수채화 일러스트',
@@ -38,53 +38,6 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-    const handleBookIconClick = () => {
-        // 현재 페이지의 내용을 텍스트 입력 영역에 자동으로 채워넣기
-        const pageIndex = currentPageIndex || getCurrentPageIndex() || 1;
-
-        // CreateImage의 페이지 인덱스를 실제 내용 페이지로 변환
-        let contentPageNumber = 1;
-        if (pageIndex === 0) {
-            // 표지 페이지
-            contentPageNumber = 1;
-        } else if (pageIndex <= 6) {
-            // 1-2페이지(index 1) -> page1, 3-4페이지(index 2) -> page2, ...
-            contentPageNumber = pageIndex;
-        } else {
-            // 13페이지는 마지막 페이지
-            contentPageNumber = 6;
-        }
-
-        const pageContent = getPageContent(contentPageNumber);
-
-        if (pageContent) {
-            // 페이지 내용을 이미지 생성 설명으로 변환
-            const imageDescription = convertContentToImageDescription(pageContent);
-            setDescription(imageDescription);
-        } else {
-            // 내용이 없으면 기본 메시지
-            setDescription('현재 페이지에 내용이 없습니다. 직접 이미지 설명을 입력해주세요.');
-        }
-    };
-
-    const convertContentToImageDescription = (content) => {
-        // 동화책 내용을 이미지 생성 설명으로 변환하는 로직
-        if (!content || content.trim() === '') return '';
-
-        // 첫 번째 문장 또는 처음 100자 정도를 이미지 설명으로 사용
-        const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 0);
-        const firstSentence = sentences[0]?.trim();
-
-        if (firstSentence && firstSentence.length > 0) {
-            // 이미지 생성에 적합하도록 설명 변환
-            return `${firstSentence}을 표현한 동화 일러스트`;
-        }
-
-        // 첫 100자 사용
-        const truncated = content.substring(0, 100);
-        return truncated + (content.length > 100 ? '을 표현한 동화 일러스트' : '');
-    };
-
     const handleGenerate = async () => {
         if (!description.trim()) {
             alert('이미지 설명을 입력해주세요.');
@@ -94,7 +47,7 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
         setIsGenerating(true);
 
         try {
-            const pageNum = currentPageIndex || getCurrentPageIndex() || 1;
+            const pageNum = currentPageIndex;
 
             console.log('이미지 생성 요청:', {
                 description: description.trim(),
@@ -112,9 +65,14 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
             console.log('이미지 생성 결과:', result);
 
             if (result.success) {
+                // ✅ 여기에서 스토어에 저장
+                setAppliedImage(currentPageIndex, result.imagePath);
+
                 // 선택된 스타일의 인덱스를 찾아서 다음 단계로 전달
                 const selectedIndex = dropdownOptions.indexOf(dropdownText);
                 onNext(selectedIndex, result);
+
+                alert('이미지가 성공적으로 생성되었습니다!');
             } else {
                 console.error('이미지 생성 실패:', result.error);
                 alert(`이미지 생성에 실패했습니다: ${result.error || '알 수 없는 오류'}`);
@@ -125,8 +83,9 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
         } finally {
             setIsGenerating(false);
         }
-    };
+    }; // ✅ handleGenerate 함수 끝
 
+    // ✅ 컴포넌트의 return (함수 밖에 있어야 함)
     return (
         <div className="flex flex-col justify-center items-center">
             {/* (1) AI 이미지 생성하기 제목 */}
@@ -196,7 +155,6 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
                         >
                             <SmallIconButton
                                 icon={<span className="material-symbols-outlined text-custom-jk_yellow text-[29px] w-[29px] h-[29px]">book_2</span>}
-                                onClick={handleBookIconClick}
                                 disabled={isGenerating}
                             />
                         </div>
@@ -224,6 +182,6 @@ const ImageContent1 = ({ onNext, currentPageIndex }) => {
             </div>
         </div>
     );
-};
+}; // ✅ ImageContent1 컴포넌트 함수 끝
 
 export default ImageContent1;

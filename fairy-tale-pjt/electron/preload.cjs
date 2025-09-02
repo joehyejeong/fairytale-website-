@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     applyImage: (data) => ipcRenderer.invoke('apply-image', data),
     saveFile: (data) => ipcRenderer.invoke('save-file', data),
     testAIConnection: () => ipcRenderer.invoke('test-ai-connection'),
+    checkAIHealth: () => ipcRenderer.invoke('check-ai-health'),
 });

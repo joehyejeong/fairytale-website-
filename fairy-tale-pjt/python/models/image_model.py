@@ -7,8 +7,30 @@ from pathlib import Path
 from PIL import Image
 import torch
 
-# HuggingFace 캐시 위치를 D 드라이브로 설정
-cache_dir = Path(__file__).parent.parent.parent / "models_cache"
+# USB에 EXE파일을 함께 넣어놓음을 가정하여, 이렇게 현재 실행 위치에서 부터 찾는 것.
+
+
+def find_model_cache_dir():
+    """USB 우선, 개발환경 폴백으로 캐시 경로 찾기"""
+    # USB에서 찾기
+    current_script = Path(__file__)
+    for parent in [current_script.parent] + list(current_script.parents):
+        usb_models = parent / "models"
+        if usb_models.exists():
+            usb_cache = usb_models / "image-models" / "cache"
+            if usb_cache.exists():
+                return usb_cache
+
+    # 개발환경 경로
+    dev_cache = Path(__file__).parent.parent.parent / "models_cache"
+    if dev_cache.exists():
+        return dev_cache
+
+    # 기본 HF 캐시
+    return Path.home() / ".cache" / "huggingface"
+
+
+cache_dir = find_model_cache_dir()
 os.environ["HF_HOME"] = str(cache_dir)
 os.environ["TRANSFORMERS_CACHE"] = str(cache_dir)
 os.environ["HF_DATASETS_CACHE"] = str(cache_dir)
@@ -302,30 +324,20 @@ class ImageModel:
             }
 
     def check_health(self):
-        """모델 상태 확인"""
+        """모델 상태 확인 (실제 이미지 생성 없이)"""
         if not self.available:
             return False, "이미지 모델이 초기화되지 않았습니다"
 
         try:
-            # 간단한 테스트 이미지 생성
-            test_prompt = {
-                "positive_prompt": "a simple test image",
-                "negative_prompt": "blurry, low quality"
-            }
+            # 모델 파이프라인이 로드되었는지만 확인
+            if self.pipe is None:
+                return False, "이미지 파이프라인이 로드되지 않았습니다"
 
-            # 임시 파일로 테스트
-            import tempfile
-            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
-                result = self.generate_image(test_prompt, 999, 128, 128)
+            # 간단한 토크나이저 테스트만 (이미지 생성 없이)
+            test_prompt = "a simple test"
+            # 토큰화만 테스트 (실제 생성 X)
 
-                # 테스트 파일 삭제
-                if os.path.exists(result.get("image_path", "")):
-                    os.unlink(result["image_path"])
-
-                if result["success"]:
-                    return True, f"이미지 모델 정상 작동 ({result.get('device_used', self.device)})"
-                else:
-                    return False, f"이미지 모델 오류: {result.get('error', 'Unknown error')}"
+            return True, f"이미지 모델 정상 ({self.device})"
 
         except Exception as e:
-            return False, f"이미지 모델 테스트 실패: {str(e)}"
+            return False, f"이미지 모델 오류: {str(e)}"

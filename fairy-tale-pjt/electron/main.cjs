@@ -1,4 +1,3 @@
-// electron/main.cjs - 이미지 생성 기능이 추가된 버전
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -469,63 +468,64 @@ ipcMain.handle('apply-image', async (event, { pageNumber }) => {
 });
 
 // AI 연결 상태 테스트 핸들러
-ipcMain.handle('test-ai-connection', async (event) => {
+ipcMain.handle('check-ai-health', async () => {
     try {
-        console.log('AI 연결 상태 테스트 요청');
+        const { spawn } = require('child_process');
+        const path = require('path');
 
-        const pythonScript = path.join(__dirname, '../python/test_connection.py');
-        const pythonExecutable = findPythonExecutable();
+        // Python health checker 실행
+        const pythonPath = isDev
+            ? path.join(__dirname, '../venv/Scripts/python.exe')
+            : path.join(process.resourcesPath, 'python/python.exe');
 
-        return new Promise((resolve) => {
-            const python = spawn(pythonExecutable, [pythonScript], {
-                env: {
-                    ...process.env,
-                    PYTHONIOENCODING: 'utf-8',
-                    PYTHONPATH: path.join(__dirname, '../python')
-                },
-                cwd: path.join(__dirname, '../python'),
-                stdio: ['pipe', 'pipe', 'pipe']
-            });
+        const scriptPath = isDev
+            ? path.join(__dirname, '../python/controllers/health_checker.py')
+            : path.join(process.resourcesPath, 'python/controllers/health_checker.py');
+
+        return new Promise((resolve, reject) => {
+            const process = spawn(pythonPath, [scriptPath]);
 
             let stdout = '';
             let stderr = '';
 
-            python.stdout.on('data', (data) => {
+            process.stdout.on('data', (data) => {
                 stdout += data.toString();
             });
 
-            python.stderr.on('data', (data) => {
+            process.stderr.on('data', (data) => {
                 stderr += data.toString();
+                console.log('Python Health Check:', data.toString());
             });
 
-            python.on('close', (code) => {
-                console.log(`Python 프로세스 종료 코드: ${code}`);
-                console.log(`Python 출력: ${stdout}`);
-
-                // Python 출력을 파싱하여 각 모델의 상태 확인
-                const ollamaConnected = stdout.includes('Ollama 서버 연결됨');
-                const textConnected = stdout.includes('텍스트 모델 연결됨');
-                const imageConnected = stdout.includes('이미지 모델 연결됨');
-
-                console.log('📊 파싱된 연결 상태:', {
-                    ollama: ollamaConnected,
-                    text: textConnected,
-                    image: imageConnected
-                });
-
-                resolve({
-                    ollama: { connected: ollamaConnected, message: ollamaConnected ? "Ollama 서버 연결됨" : "Ollama 서버 연결 안 됨" },
-                    text: { connected: textConnected, message: textConnected ? "텍스트 모델 연결됨" : "텍스트 모델 연결 안 됨" },
-                    image: { connected: imageConnected, message: imageConnected ? "이미지 모델 연결됨" : "이미지 모델 연결 안 됨" }
-                });
+            process.on('close', (code) => {
+                if (code === 0) {
+                    try {
+                        const result = JSON.parse(stdout.trim());
+                        resolve({
+                            text: result.text_available || false,
+                            image: result.image_available || false,
+                            messages: result.messages || {}
+                        });
+                    } catch (e) {
+                        reject(new Error(`JSON 파싱 오류: ${e.message}`));
+                    }
+                } else {
+                    reject(new Error(`Health check 실패: ${stderr}`));
+                }
             });
+
+            // 타임아웃 (10초)
+            setTimeout(() => {
+                process.kill();
+                reject(new Error('Health check 타임아웃'));
+            }, 60000);
         });
+
     } catch (error) {
-        console.error('AI 연결 테스트 오류:', error);
         return {
-            ollama: { connected: false, message: error.message },
-            text: { connected: false, message: error.message },
-            image: { connected: false, message: error.message }
+            text: false,
+            image: false,
+            error: error.message
         };
     }
 });

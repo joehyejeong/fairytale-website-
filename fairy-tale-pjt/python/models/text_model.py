@@ -123,6 +123,7 @@ class TextModel:
     def _initialize_ollama(self):
         """Ollama 초기화"""
         try:
+            self._setup_ollama_path()
             import ollama
 
             # Ollama 클라이언트 생성
@@ -158,6 +159,21 @@ class TextModel:
         except Exception as e:
             print(f"Ollama 초기화 실패: {e}", file=sys.stderr)
             self.available = False
+
+    def _setup_ollama_path(self):
+        """USB 우선 Ollama 모델 경로 설정"""
+        from pathlib import Path
+
+        # USB에서 Ollama 모델 경로 찾기
+        current_script = Path(__file__)
+        for parent in [current_script.parent] + list(current_script.parents):
+            usb_ollama = parent / "models" / "text-models" / "ollama"
+            if usb_ollama.exists():
+                os.environ["OLLAMA_MODELS"] = str(usb_ollama)
+                print(f"USB Ollama 경로 설정: {usb_ollama}", file=sys.stderr)
+                return
+
+        print("USB Ollama 경로를 찾을 수 없음, 기본 경로 사용", file=sys.stderr)
 
     def generate(self, prompt, max_tokens=2000, temperature=0.7):
         """텍스트 생성 - GPU 로컬 모델 우선, Ollama 폴백"""

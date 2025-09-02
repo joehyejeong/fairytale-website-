@@ -22,58 +22,28 @@ const Header = () => {
     const { getBookData, getTitle, getName, reset } = useStoryStore();
 
     // AI 연결 상태 테스트
+    // Header 컴포넌트에서 기존 코드를 이걸로 교체
     useEffect(() => {
         const testConnections = async () => {
-            console.log('🚀 Header에서 AI 연결 테스트 시작');
+            console.log('AI 연결 상태 체크 시작 (빠른 체크)');
             try {
-                const status = await testAllAIConnections();
-                console.log('📊 Header에서 받은 AI 상태:', status);
-                setAiConnectionStatus(status);
-                console.log('✅ AI 연결 상태 업데이트 완료');
-            } catch (error) {
-                console.error('💥 Header에서 AI 연결 테스트 실패:', error);
-            }
-        };
+                // 실제 이미지 생성 없이 연결 상태만 체크
+                const healthStatus = await window.electronAPI.checkAIHealth();
 
-        // 이미지 모델 연결 테스트
-        const testImageConnection = async () => {
-            console.log('🖼️ 이미지 모델 연결 테스트 시작');
-
-            try {
-                // 간단한 이미지 생성 테스트 (빈 설명으로)
-                const result = await window.electronAPI.generateImage({
-                    description: 'test connection',
-                    style: '수채화 일러스트',
-                    pageNumber: 1
+                setAiConnectionStatus({
+                    text: healthStatus.text,
+                    image: healthStatus.image
                 });
 
-                if (result.success) {
-                    console.log('✅ 이미지 모델 연결 성공');
-                    setAiConnectionStatus(prev => ({ ...prev, image: true }));
-                } else {
-                    console.log('❌ 이미지 모델 연결 실패:', result.error);
-                    setAiConnectionStatus(prev => ({ ...prev, image: false }));
-                }
+                console.log('AI 연결 상태:', healthStatus);
             } catch (error) {
-                console.error('💥 이미지 모델 연결 테스트 오류:', error);
-                setAiConnectionStatus(prev => ({ ...prev, image: false }));
+                console.error('AI 연결 테스트 실패:', error);
+                setAiConnectionStatus({ text: false, image: false });
             }
         };
 
-        // 컴포넌트 마운트 후 1초 뒤에 연결 테스트 실행 (스플래시 화면 중에 테스트)
-        console.log('⏰ Header 마운트, 1초 후 AI 테스트 예약');
-        const timer = setTimeout(async () => {
-            // 텍스트와 이미지 모델을 병렬로 테스트
-            await Promise.all([
-                testConnections(),
-                testImageConnection()
-            ]);
-        }, 1000);
-
-        return () => {
-            console.log('🧹 Header 언마운트, 타이머 정리');
-            clearTimeout(timer);
-        };
+        // 즉시 실행 (1초 대기 불필요)
+        testConnections();
     }, []);
 
     return (

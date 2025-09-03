@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import ImageContent1 from './ImageContent1';
 import ImageContent2 from './ImageContent2';
 
-const ImageModal = ({ isOpen, onClose, currentPageIndex }) => {
+const ImageModal = ({ isOpen, onClose, currentPageIndex, onImageApplied }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedStyle, setSelectedStyle] = useState(0);
     const [generationResult, setGenerationResult] = useState(null);
@@ -23,13 +23,17 @@ const ImageModal = ({ isOpen, onClose, currentPageIndex }) => {
     };
 
     const handleApply = (applyResult) => {
-        // 적용이 성공하면 모달을 닫고 상태 초기화
-        if (applyResult && applyResult.success) {
-            console.log('이미지 적용 완료:', applyResult);
-            handleClose();
+        console.log('ImageModal - handleApply 호출됨:', applyResult);
 
-            // 부모 컴포넌트에 이미지 적용 완료를 알릴 수 있음
-            // 필요하다면 onImageApplied 같은 콜백을 props로 받아서 호출
+        // 적용이 성공하면 부모에게 알리고 모달 상태 초기화
+        if (applyResult && applyResult.success) {
+            // 부모 컴포넌트에 이미지 적용 완료 알림
+            if (onImageApplied) {
+                onImageApplied(applyResult);
+            }
+
+            // 모달 상태 초기화는 부모에서 처리하도록 변경
+            // handleClose()를 바로 호출하지 않음
         }
     };
 

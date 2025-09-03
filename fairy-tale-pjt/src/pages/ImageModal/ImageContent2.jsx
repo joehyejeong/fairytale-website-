@@ -12,7 +12,7 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
     const [generatedImagePath, setGeneratedImagePath] = useState('');
 
     // 스토어에서 함수들 가져오기
-    const { setAppliedImage } = useStoryStore();
+    const { getAppliedImage, setAppliedImage } = useStoryStore();
 
     const styleOptions = [
         { id: 0, name: '수채화 일러스트', image: '/01.webp' },
@@ -23,11 +23,28 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
     ];
 
     useEffect(() => {
-        // 생성된 이미지 결과가 있으면 이미지 경로 설정
-        if (generationResult && generationResult.success && generationResult.image_path) {
-            setGeneratedImagePath(generationResult.image_path);
+        console.log('ImageContent2 - generationResult:', generationResult);
+        console.log('ImageContent2 - currentPageIndex:', currentPageIndex);
+
+        // 1. generationResult에서 이미지 경로 확인 (여러 가능한 경로명 확인)
+        if (generationResult && generationResult.success) {
+            const imagePath = generationResult.imagePath ||
+                generationResult.image_path ||
+                generationResult.path;
+
+            if (imagePath) {
+                console.log('이미지 경로 설정:', imagePath);
+                setGeneratedImagePath(imagePath);
+            }
         }
-    }, [generationResult]);
+
+        // 2. 스토어에서 이미지 경로 확인 (백업)
+        const storedImagePath = getAppliedImage(currentPageIndex);
+        if (storedImagePath && !generatedImagePath) {
+            console.log('스토어에서 이미지 경로 가져옴:', storedImagePath);
+            setGeneratedImagePath(storedImagePath);
+        }
+    }, [generationResult, currentPageIndex, getAppliedImage, generatedImagePath]);
 
     const handleStyleSelect = (styleId) => {
         setSelectedStyle(styleId);
@@ -35,38 +52,70 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
     };
 
     const handleApply = async () => {
+        console.log('이미지 적용 시작...');
+        console.log('현재 상태:', { generationResult, generatedImagePath, currentPageIndex });
+
         if (!generationResult || !generationResult.success) {
             alert('적용할 이미지가 없습니다.');
+            console.error('generationResult가 유효하지 않음:', generationResult);
+            return;
+        }
+
+        // 이미지 경로 확인 (여러 가능성 체크)
+        const imagePathToApply = generationResult.imagePath ||
+            generationResult.image_path ||
+            generationResult.path ||
+            generatedImagePath;
+
+        console.log('적용할 이미지 경로:', imagePathToApply);
+
+        if (!imagePathToApply) {
+            alert('이미지 경로를 찾을 수 없습니다.');
+            console.error('이미지 경로 없음. generationResult:', generationResult);
             return;
         }
 
         setIsApplying(true);
 
         try {
-            console.log('이미지 적용 요청:', {
-                pageNumber: currentPageIndex
-            });
+            const applyData = {
+                pageNumber: currentPageIndex,
+                imagePath: imagePathToApply,
+                selectedStyle: selectedStyle
+            };
+
+            console.log('이미지 적용 요청 데이터:', applyData);
 
             // Electron API를 통해 이미지 적용 요청 
-            const result = await window.electronAPI.applyImage({
-                pageNumber: currentPageIndex
-            });
+            const result = await window.electronAPI.applyImage(applyData);
 
             console.log('이미지 적용 결과:', result);
 
             if (result.success) {
                 // 스토어에 적용된 이미지 경로 저장
-                setAppliedImage(currentPageIndex, result.imagePath);
+                const finalImagePath = result.imagePath || imagePathToApply;
+                setAppliedImage(currentPageIndex, finalImagePath);
 
                 alert('이미지가 성공적으로 적용되었습니다!');
 
                 // 적용이 성공하면 부모 컴포넌트에 알림
                 if (onApply) {
-                    onApply(result);
+                    onApply({
+                        ...result,
+                        imagePath: finalImagePath
+                    });
                 }
             } else {
-                console.error('이미지 적용 실패:', result.error);
-                alert(`이미지 적용에 실패했습니다: ${result.error || '알 수 없는 오류'}`);
+                console.error('이미지 적용 실패:', result);
+                let errorMsg = result.error || '알 수 없는 오류';
+
+                // 디버그 정보가 있으면 표시
+                if (result.debug) {
+                    console.log('디버그 정보:', result.debug);
+                    errorMsg += `\n\n디버그 정보:\n- 제공된 경로: ${result.debug.imagePath}\n- 임시 경로: ${result.debug.tempPath}\n- 임시 폴더 존재: ${result.debug.tempsExists}\n- 임시 파일들: ${result.debug.tempFiles.join(', ')}`;
+                }
+
+                alert(`이미지 적용에 실패했습니다: ${errorMsg}`);
             }
         } catch (error) {
             console.error('이미지 적용 중 오류:', error);
@@ -77,14 +126,28 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
     };
 
     const renderGeneratedImage = () => {
+        console.log('이미지 렌더링 - generatedImagePath:', generatedImagePath);
+
         if (generatedImagePath) {
+            // file:// 프로토콜이 없으면 추가
+            const imageSrc = generatedImagePath.startsWith('file://')
+                ? generatedImagePath
+                : `file://${generatedImagePath}`;
+
+            console.log('최종 이미지 소스:', imageSrc);
+
             return (
                 <img
-                    src={`file://${generatedImagePath}`}
+                    src={imageSrc}
                     alt="Generated"
                     className="w-full h-full object-cover"
+                    onLoad={() => {
+                        console.log('이미지 로드 성공:', imageSrc);
+                    }}
                     onError={(e) => {
-                        console.error('이미지 로드 실패:', generatedImagePath);
+                        console.error('이미지 로드 실패:', imageSrc);
+                        console.error('Error event:', e);
+
                         // 에러 시 기본 아이콘 표시
                         e.target.style.display = 'none';
                         const parent = e.target.parentElement;
@@ -93,8 +156,11 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
                             fallback.src = sunIcon;
                             fallback.alt = 'Fallback';
                             fallback.className = 'fallback-icon';
-                            fallback.style.width = '84px';
-                            fallback.style.height = '84px';
+                            fallback.style.cssText = `
+                                width: 84px; 
+                                height: 84px; 
+                                object-fit: contain;
+                            `;
                             parent.appendChild(fallback);
                         }
                     }}
@@ -111,6 +177,15 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
             />
         );
     };
+
+    // 디버깅을 위한 상태 출력
+    console.log('ImageContent2 상태:', {
+        generationResult,
+        generatedImagePath,
+        currentPageIndex,
+        selectedStyle,
+        isApplying
+    });
 
     return (
         <div className="flex flex-col justify-center">
@@ -237,7 +312,7 @@ const ImageContent2 = ({ onBack, selectedStyle: initialSelectedStyle = 0, genera
                     <div className="mt-[9px]">
                         <button
                             onClick={handleApply}
-                            disabled={isApplying || !generationResult || !generationResult.success}
+                            disabled={isApplying || !generationResult || !generationResult.success || !generatedImagePath}
                             className="w-[203px] h-[42px] bg-[var(--jk-blue)] disabled:bg-[#ccc] rounded-[8px] border-none text-white font-medium text-[21px] font-['Noto_Sans_KR'] disabled:cursor-not-allowed cursor-pointer transition-opacity duration-200 disabled:opacity-60 opacity-100 hover:opacity-80 disabled:hover:opacity-60"
                         >
                             {isApplying ? '적용 중...' : '적용하기'}

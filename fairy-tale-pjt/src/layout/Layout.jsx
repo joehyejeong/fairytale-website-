@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Progress from './Progress';
-import UnderCharacter from './UnderCharacter';
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -53,7 +52,6 @@ const Layout = ({ children }) => {
             <main className={`${progressType ? 'pt-[50px]' : ''} min-w-[1026px]`}>
                 {children}
             </main>
-            {/* <UnderCharacter speechBubbleText={speechBubbleText} /> */}
         </div>
     );
 };

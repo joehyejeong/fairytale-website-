@@ -6,6 +6,7 @@ import RightPage from './RightPage';
 import TitlePage from './TitlePage';
 import ImageModal from '../ImageModal/ImageModal';
 import useStoryStore from '@/stores/storyStore';
+import '../../styles/animations.css'
 
 const CreateImage = () => {
     const [currentPage, setCurrentPage] = useState(0);
@@ -13,6 +14,7 @@ const CreateImage = () => {
     const [flipDirection, setFlipDirection] = useState('');
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [clickedPageSide, setClickedPageSide] = useState(null); // 'left' or 'right'
+    const [imageUpdateTrigger, setImageUpdateTrigger] = useState(0); // 강제 리렌더링용
 
     // 스토어에서 함수들 가져오기
     const {
@@ -49,7 +51,6 @@ const CreateImage = () => {
 
     const loadExistingImages = async () => {
         // saves 폴더에서 기존 이미지들을 확인
-        // 실제 구현에서는 파일 시스템 접근이 필요하므로 기본 구조만 제공
         try {
             console.log('기존 이미지 로드 확인 중...');
             // 여기서는 예시로 빈 로직으로 남겨둡니다
@@ -59,62 +60,45 @@ const CreateImage = () => {
         }
     };
 
-    // 페이지 인덱스를 실제 페이지 번호로 변환
-    // const getPageNumberFromIndex = (pageIndex, side) => {
-    //     if (pageIndex === 0) {
-    //         // 표지 페이지
-    //         return side === 'left' ? 0 : 1;
-    //     } else if (pageIndex === 7) {
-    //         // 마지막 페이지 (13페이지) - 왼쪽만 사용
-    //         return side === 'left' ? 13 : null;
-    //     } else {
-    //         // 일반 페이지들
-    //         const basePageNumber = (pageIndex - 1) * 2 + 1;
-    //         return side === 'left' ? basePageNumber : basePageNumber + 1;
-    //     }
-    // };
-
-    // 페이지별 이미지 경로 가져오기
+    // 페이지별 이미지 경로 가져오기 (수정됨)
     const getImageForPage = (pageNumber) => {
-        if (pageNumber === null) return null;
         const imagePath = getAppliedImage(pageNumber);
         console.log(`getImageForPage - 페이지 ${pageNumber}:`, imagePath);
-        if (imagePath && imagePath !== 'null') {
-            // 파일명 형식 확인
-            const fileName = imagePath.split('/').pop() || imagePath.split('\\').pop();
-            console.log(`getImageForPage - 파일명:`, fileName);
 
-            // temps 폴더의 이미지는 @/assets/temps 경로로 접근
-            if (imagePath.includes('temps')) {
-                return `@/assets/temps/${fileName}`;
-            } else {
-                return `file://${imagePath}`;
-            }
+        if (!imagePath || imagePath === 'null' || imagePath === null) {
+            return null;
         }
-        return null;
+
+        // 절대 경로인 경우 file:// 프로토콜 사용
+        if (imagePath.startsWith('/') || imagePath.match(/^[A-Za-z]:/)) {
+            return `file://${imagePath}`;
+        }
+
+        // 상대 경로인 경우 그대로 반환
+        return imagePath;
     };
 
     const handlePrevPage = () => {
-        if (isFlipping || currentPage === 0) return; //첫번째 장이면 비활성화 
+        if (isFlipping || currentPage === 0) return;
 
         setIsFlipping(true);
         setFlipDirection('left');
 
         setTimeout(() => {
-            setCurrentPage(prev => Math.max(0, prev - 1)); //현재페이지 - 1 (첫번째 장보다 작은값 불가  )
+            setCurrentPage(prev => Math.max(0, prev - 1));
             setIsFlipping(false);
             setFlipDirection('');
         }, 1000);
     };
 
     const handleNextPage = () => {
-        if (isFlipping || currentPage === pages.length - 1) return; //마지막 장이면 비활성화
+        if (isFlipping || currentPage === pages.length - 1) return;
 
         setIsFlipping(true);
         setFlipDirection('right');
 
         setTimeout(() => {
-            setCurrentPage(prev => Math.min(pages.length - 1, prev + 1)); //현재페이지 + 1 (마지막 장보다 큰 값 )
+            setCurrentPage(prev => Math.min(pages.length - 1, prev + 1));
             setIsFlipping(false);
             setFlipDirection('');
         }, 1000);
@@ -137,67 +121,76 @@ const CreateImage = () => {
     };
 
     const handleImageApplied = (applyResult) => {
+        console.log('handleImageApplied 호출됨:', applyResult);
+
         // 이미지 적용 후 상태 업데이트
         if (applyResult && applyResult.success) {
             const pageNumber = applyResult.pageNumber;
+
+            // 스토어에 저장
             setAppliedImage(pageNumber, applyResult.imagePath);
 
             console.log(`페이지 ${pageNumber}에 이미지 적용됨:`, applyResult.imagePath);
 
-            // 강제 리렌더링을 위한 상태 업데이트
-            setCurrentPage(prev => prev);
+            // 강제 리렌더링 트리거
+            setImageUpdateTrigger(prev => prev + 1);
+
+            // 모달 닫기
+            setTimeout(() => {
+                handleCloseModal();
+            }, 500); // 약간의 딜레이 후 모달 닫기
         }
     };
 
-    // const getCurrentPageIndex = () => {
-    //     if (clickedPageSide) {
-    //         return getPageNumberFromIndex(currentPage, clickedPageSide);
-    //     }
-    //     return currentPage;
-    // };
+    // 디버깅용: 현재 페이지의 이미지 상태 확인
+    useEffect(() => {
+        console.log('현재 페이지 상태:', {
+            currentPage,
+            imageUpdateTrigger,
+            appliedImage: getAppliedImage(currentPage),
+            processedImage: getImageForPage(currentPage)
+        });
+    }, [currentPage, imageUpdateTrigger]);
 
     const renderBook = () => {
-        // const currentType = pages[currentPage];
+        // 현재 페이지의 이미지 경로 가져오기
+        const currentPageImage = getImageForPage(currentPage);
 
-        // if (currentPageData.type === 'cover') 
-        {
-            //     const leftPageNumber = getPageNumberFromIndex(currentPage, 'left');
-            //     const rightPageNumber = getPageNumberFromIndex(currentPage, 'right');
-
-            return (
-                <div className="book-container flex items-center gap-0 book-hover">
-                    <div className={`book-page left-page page-shadow page-depth ${isFlipping && flipDirection === 'left' ? 'flipping-left' : ''}`}>
-                        <LeftPage
-                            isType={pages[currentPage].type} // 이렇게 쓰는게 맞나? cover,content,last
-                            isLastPage={pages[currentPage].title === '13페이지'}// 이렇게 쓰는게 맞나?
-                            onImageClick={() => handleImageClick('left')}
-                            title={title}
-                            userName={userName}
-                            appliedImage={getImageForPage(currentPage)}// 이렇게 쓰는게 맞나?
-                            pageNumber={currentPage}// 이렇게 쓰는게 맞나?
-                        />
-                    </div>
-                    {pages[currentPage].type === 'cover' && (
-                        <div className="book-spine-shadow">
-                            <TitlePage title={title} userName={userName} />
-                        </div>
-                    )}
-
-
-                    <div className={`book-page right-page page-shadow page-depth ${isFlipping && flipDirection === 'right' ? 'flipping-right' : ''}`}>
-                        <RightPage
-                            isType={pages[currentPage].type}// 이렇게 쓰는게 맞나? cover,content,last
-                            isLastPage={pages[currentPage].title === '13페이지'}// 이렇게 쓰는게 맞나?
-                            onImageClick={() => handleImageClick('right')}
-                            title={title}
-                            userName={userName}
-                            appliedImage={getImageForPage(currentPage)}// 이렇게 쓰는게 맞나?
-                            pageNumber={currentPage}// 이렇게 쓰는게 맞나?
-                        />
-                    </div>
+        return (
+            <div className="book-container flex items-center gap-0 book-hover">
+                <div className={`book-page left-page page-shadow page-depth ${isFlipping && flipDirection === 'left' ? 'flipping-left' : ''}`}>
+                    <LeftPage
+                        isType={pages[currentPage].type}
+                        isLastPage={pages[currentPage].title === '13페이지'}
+                        onImageClick={() => handleImageClick('left')}
+                        title={title}
+                        userName={userName}
+                        appliedImage={currentPageImage}
+                        pageNumber={currentPage}
+                        key={`left-${currentPage}-${imageUpdateTrigger}`} // 강제 리렌더링을 위한 key
+                    />
                 </div>
-            );
-        }
+
+                {pages[currentPage].type === 'cover' && (
+                    <div className="book-spine-shadow">
+                        <TitlePage title={title} userName={userName} />
+                    </div>
+                )}
+
+                <div className={`book-page right-page page-shadow page-depth ${isFlipping && flipDirection === 'right' ? 'flipping-right' : ''}`}>
+                    <RightPage
+                        isType={pages[currentPage].type}
+                        isLastPage={pages[currentPage].title === '13페이지'}
+                        onImageClick={() => handleImageClick('right')}
+                        title={title}
+                        userName={userName}
+                        appliedImage={currentPageImage}
+                        pageNumber={currentPage}
+                        key={`right-${currentPage}-${imageUpdateTrigger}`} // 강제 리렌더링을 위한 key
+                    />
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -215,7 +208,7 @@ const CreateImage = () => {
                 </div>
 
                 {/* 책 모양 */}
-                <div className="page-fade fade-in">
+                <div className="page-fade fade-in" key={`book-${currentPage}-${imageUpdateTrigger}`}>
                     {renderBook()}
                 </div>
             </div>
@@ -247,12 +240,11 @@ const CreateImage = () => {
             <ImageModal
                 isOpen={isImageModalOpen}
                 onClose={handleCloseModal}
-                currentPageIndex={currentPage} //맞나?
+                currentPageIndex={currentPage}
                 onImageApplied={handleImageApplied}
             />
         </div>
     );
 }
-
 
 export default CreateImage;

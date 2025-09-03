@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/* 커스텀 색상 클래스 */
+.bg-custom-jk_yellow {
+    background-color: var(--jk-yellow);
+}
+
+.bg-custom-jk_light_yellow {
+    background-color: var(--jk-light-yellow);
+}
+
+.bg-custom-jk_lightest_yellow {
+    background-color: var(--jk-lightest-yellow);
+}
+
+.bg-custom-jk_dark_yellow {
+    background-color: var(--jk-dark-yellow);
+}
+
+.bg-custom-jk_red {
+    background-color: var(--jk-red);
+}
+
+.bg-custom-jk_blue {
+    background-color: var(--jk-blue);
+}
+
+.bg-custom-jk_gray {
+    background-color: var(--jk-gray);
+}
+
+.bg-custom-jk_pink {
+    background-color: var(--jk-pink);
+}
+
+.text-custom-jk_yellow {
+    color: var(--jk-yellow);
+}
+
+.text-custom-jk_light_yellow {
+    color: var(--jk-light-yellow);
+}
+
+.text-custom-jk_lightest_yellow {
+    color: var(--jk-lightest-yellow);
+}
+
+.text-custom-jk_dark_yellow {
+    color: var(--jk-dark-yellow);
+}
+
+.text-custom-jk_red {
+    color: var(--jk-red);
+}
+
+.text-custom-jk_blue {
+    color: var(--jk-blue);
+}
+
+.text-custom-jk_gray {
+    color: var(--jk-gray);
+}
+
+.text-custom-jk_pink {
+    color: var(--jk-pink);
+}
+
+.border-custom-jk_yellow {
+    border-color: var(--jk-yellow);
+}
+
+.border-custom-jk_light_yellow {
+    border-color: var(--jk-light-yellow);
+}
+
+.border-custom-jk_lightest_yellow {
+    border-color: var(--jk-lightest-yellow);
+}
+
+.border-custom-jk_dark_yellow {
+    border-color: var(--jk-dark-yellow);
+}
+
+.border-custom-jk_red {
+    border-color: var(--jk-red);
+}
+
+.border-custom-jk_blue {
+    border-color: var(--jk-blue);
+}
+
+.border-custom-jk_gray {
+    border-color: var(--jk-gray);
+}
+
+.border-custom-jk_pink {
+    border-color: var(--jk-pink);
+}
+
+.hover\:text-custom-jk_dark_yellow:hover {
+    color: var(--jk-dark-yellow);
+}
+
+.hover\:bg-custom-jk_dark_yellow:hover {
+    background-color: var(--jk-dark-yellow);
+}

@@ -13,35 +13,29 @@ def main():
     try:
         print("빠른 AI 연결 상태 체크 시작", file=sys.stderr)
 
-        # 텍스트 모델 - 라이브러리만 체크
+        # 텍스트 모델 체크
         text_available = False
+        text_message = "Ollama 연결 실패"
         try:
             import ollama
-            # Ollama 서버 연결만 체크 (모델 로드 안함)
             client = ollama.Client(host='localhost:11434')
             models = client.list()
             text_available = True
-            text_message = "Ollama 서버 연결 정상"
-            print("텍스트 모델: Ollama 서버 연결 확인", file=sys.stderr)
+            text_message = "Ollama 연결 성공"
         except Exception as e:
-            text_message = f"Ollama 연결 실패: {str(e)}"
-            print(f"텍스트 모델 오류: {e}", file=sys.stderr)
+            text_message = f"Ollama 오류: {str(e)}"
 
-        # 이미지 모델 - 라이브러리만 체크
+        # 이미지 모델 체크
         image_available = False
+        image_message = "이미지 모델 로드 실패"
         try:
-            from diffusers import StableDiffusionPipeline
-            import torch
-            # 단순히 라이브러리 존재와 torch 사용 가능 여부만 체크
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            image_available = True
-            image_message = f"이미지 생성 라이브러리 정상 ({device})"
-            print(f"이미지 모델: 라이브러리 확인 완료 ({device})", file=sys.stderr)
+            from models.image_model import ImageModel
+            img_model = ImageModel()
+            image_available = img_model.available
+            image_message = "이미지 모델 로드 성공" if image_available else "이미지 모델 초기화 실패"
         except Exception as e:
-            image_message = f"이미지 라이브러리 오류: {str(e)}"
-            print(f"이미지 모델 오류: {e}", file=sys.stderr)
+            image_message = f"이미지 모델 오류: {str(e)}"
 
-        # 결과 출력
         result = {
             "success": True,
             "text_available": text_available,
@@ -59,7 +53,11 @@ def main():
             "success": False,
             "error": f"health check 오류: {str(e)}",
             "text_available": False,
-            "image_available": False
+            "image_available": False,
+            "messages": {
+                "text": "체크 실패",
+                "image": "체크 실패"
+            }
         }
         print(json.dumps(error_result, ensure_ascii=False))
 

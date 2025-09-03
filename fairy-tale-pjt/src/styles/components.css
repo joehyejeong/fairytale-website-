@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* 커스텀 스크롤바 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #15478A;
+    /* jk_blue 색상 */
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #0f2f5a;
+}
+
+/* 3D 책 넘기는 효과 */
+.book-container {
+    perspective: 1000px;
+    perspective-origin: center center;
+    position: relative;
+}
+
+.book-page {
+    transform-style: preserve-3d;
+    position: relative;
+    transition: transform 1s ease-in;
+}
+
+.book-page.left-page {
+    transform-origin: right center;
+    z-index: 1;
+}
+
+.book-page.right-page {
+    transform-origin: left center;
+    z-index: 0;
+}
+
+/* 클릭 시 페이지 넘기기 애니메이션 */
+.book-page.flipping-left {
+    animation: flipLeftPage 1s ease-in forwards;
+}
+
+.book-page.flipping-right {
+    animation: flipRightPage 1s ease-in forwards;
+}
+
+/* 페이지 그림자 효과 */
+.page-shadow {
+    box-shadow:
+        0 0 2px rgba(0, 0, 0, 0.4),
+        -2px 0 2px rgba(0, 0, 0, 0.4);
+}
+
+/* 책등 그림자 효과 */
+.book-spine-shadow {
+    box-shadow:
+        inset -2px 0 4px rgba(0, 0, 0, 0.1),
+        0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 책 호버 효과 */
+.book-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.book-hover:hover {
+    transform: translateY(-5px) rotateY(2deg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* 페이지 전환 페이드 효과 */
+.page-fade {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.5s ease;
+}
+
+.page-fade.fade-in {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* 3D 깊이 효과 */
+.page-depth {
+    transform: translateZ(1px);
+}
+
+.page-depth:hover {
+    transform: translateZ(5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}

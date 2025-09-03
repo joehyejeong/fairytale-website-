@@ -1,0 +1,14 @@
+@import "../fonts.css";
+@import "tailwindcss";
+
+:root {
+    --font-sans: 'Noto Sans KR', sans-serif;
+    --jk-yellow: #F8B300;
+    --jk-light-yellow: #FFF1CD;
+    --jk-lightest-yellow: #FFFCF5;
+    --jk-dark-yellow: #D39800;
+    --jk-red: #BD4128;
+    --jk-blue: #15478A;
+    --jk-gray: #EAEAEA;
+    --jk-pink: #FFD3D3;
+}
